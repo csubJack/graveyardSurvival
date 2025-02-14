@@ -61,12 +61,14 @@ public:
 	int xres, yres;
 	char keys[65536];
 	int mouse_cursor_on;
+    int credits;
 	Global() {
 		xres = 640;
 		yres = 480;
 		memset(keys, 0, 65536);
 		// mouse value 1 = true = mouse is a regular mouse.
 		mouse_cursor_on = 1;
+        credits = 0;
 	}
 } gl;
 
@@ -521,6 +523,15 @@ int check_keys(XEvent *e)
 			gl.mouse_cursor_on = !gl.mouse_cursor_on;
 			x11.show_mouse_cursor(gl.mouse_cursor_on);
 			break;
+        case XK_c:
+            // credits
+           // if (gl.credits == 0)
+             //   gl.credits = 1;
+           // else
+             //   gl.credits = 0;
+           // safest way
+           gl.credits = !gl.credits;
+           break;
 		case XK_s:
 			break;
 		case XK_Down:
@@ -793,6 +804,8 @@ void physics()
 	}
 }
 
+extern void show_all(Rect *r);
+
 void render()
 {
 	Rect r;
@@ -804,6 +817,11 @@ void render()
 	ggprint8b(&r, 16, 0x00ff0000, "3350 - Asteroids");
 	ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
 	ggprint8b(&r, 16, 0x00ffff00, "n asteroids: %i", g.nasteroids);
+    ggprint8b(&r, 16, 0x00ff00ff, "c for credits: ");
+    if (gl.credits) {
+        show_all(&r);
+    }
+    //show_diego(&r);
 	//-------------------------------------------------------------------------
 	//Draw the ship
 	glColor3fv(g.ship.color);
