@@ -62,6 +62,8 @@ public:
 	char keys[65536];
 	int mouse_cursor_on;
     int credits;
+    int title_screen;
+    bool game_started;
 	Global() {
 		xres = 640;
 		yres = 480;
@@ -69,6 +71,8 @@ public:
 		// mouse value 1 = true = mouse is a regular mouse.
 		mouse_cursor_on = 1;
         credits = 0;
+        title_screen = 1;
+        game_started = false;
 	}
 } gl;
 
@@ -519,6 +523,14 @@ int check_keys(XEvent *e)
 	switch (key) {
 		case XK_Escape:
 			return 1;
+        case XK_space:
+            if (!gl.game_started) {
+                gl.title_screen = !gl.title_screen;
+                gl.game_started = true;
+                break;
+            }
+           // gl.title_screen = !gl.title_screen;
+            break;
 		case XK_m:
 			gl.mouse_cursor_on = !gl.mouse_cursor_on;
 			x11.show_mouse_cursor(gl.mouse_cursor_on);
@@ -804,13 +816,30 @@ void physics()
 	}
 }
 
-extern void show_all(Rect *r);
+// added int xres and int yres so as to not cluter anything up here
+//  and instead did all the work in another file
+extern void show_all(Rect *r, int xres, int yres);
 
 void render()
 {
 	Rect r;
 	glClear(GL_COLOR_BUFFER_BIT);
 	//
+    // setting up the title screen
+    if (gl.title_screen) {
+        r.bot = gl.yres / 2;
+        r.left = gl.xres / 2 - 100;
+        r.center = 1;
+
+        ggprint8b(&r, 24, 0x00ffff00, "Graveyard Survival");
+
+        r.bot = gl.yres / 2 - 40;
+        ggprint8b(&r, 16, 0x00ffff00, "press any key to start");
+        // any other instructions we want to give to the player
+        return;
+    }
+    
+
 	r.bot = gl.yres - 20;
 	r.left = 10;
 	r.center = 0;
@@ -819,7 +848,7 @@ void render()
 	ggprint8b(&r, 16, 0x00ffff00, "n asteroids: %i", g.nasteroids);
     ggprint8b(&r, 16, 0x00ff00ff, "c for credits: ");
     if (gl.credits) {
-        show_all(&r);
+        show_all(&r, gl.xres, gl.yres);
     }
     //show_diego(&r);
 	//-------------------------------------------------------------------------
