@@ -819,6 +819,7 @@ void physics()
 // added int xres and int yres so as to not cluter anything up here
 //  and instead did all the work in another file
 extern void show_all(Rect *r, int xres, int yres);
+extern void show_title(Rect *r, int xres, int yres);
 
 void render()
 {
@@ -827,15 +828,21 @@ void render()
 	//
     // setting up the title screen
     if (gl.title_screen) {
-        r.bot = gl.yres / 2;
-        r.left = gl.xres / 2 - 100;
-        r.center = 1;
+        //r.bot = gl.yres / 2;
+        //r.left = gl.xres / 2 - 100;
+        //r.center = 1;
 
-        ggprint8b(&r, 24, 0x00ffff00, "Graveyard Survival");
+        //centering the title screen 
+        //r.center = 30;
+        //r.bot = gl.yres / 2 + 60;
+        //r.left = gl.xres/2;
 
-        r.bot = gl.yres / 2 - 40;
-        ggprint8b(&r, 16, 0x00ffff00, "press any key to start");
+        //ggprint8b(&r, 24, 0x00ffff00, "Graveyard Survival");
+
+        //r.bot = gl.yres / 2 + 30;
+        //ggprint8b(&r, 16, 0x00ffff00, "press any key to start");
         // any other instructions we want to give to the player
+        show_title(&r, gl.xres, gl.yres);
         return;
     }
     

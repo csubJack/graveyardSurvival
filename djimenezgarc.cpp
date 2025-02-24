@@ -17,5 +17,26 @@ void show_all(Rect *r, int xres, int yres)
     ggprint8b(r, 32, 0x00ff00ff, "Miguel - Programmer");
 }
 
+void show_title(Rect *r, int xres, int yres)
+{
+    //centering the title screen
+    r->center = 30;
+    r->bot = yres / 2 + 120;
+    r->left = xres/2;
 
-//void
+    ggprint16(r, 36, 0x00ff0000, "Graveyard Survival");
+
+    r->bot = yres / 2 + 30;
+    ggprint12(r, 24, 0xffffffff, "Press space to start");
+    // any other instructions we want to give to the player
+    r->bot = yres / 2 - 30;
+    ggprint8b(r, 16, 0x00ff00ff, "up arrow to move");
+    ggprint8b(r, 16, 0x00ff00ff, "left and right arrow to rotate");
+    ggprint8b(r, 16, 0x00ff00ff, "space to fire");
+}
+
+
+void draw_iris() 
+{
+    // let's start with something blocky
+}
