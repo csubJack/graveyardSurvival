@@ -6,6 +6,10 @@
 //This program is a game starting point for a 3350 project.
 //
 //
+
+// Group Header Files: 
+#include "jsweeny.h"
+
 #include <iostream>
 #include <cstdlib>
 #include <cstring>
@@ -821,30 +825,25 @@ void physics()
 extern void show_all(Rect *r, int xres, int yres);
 extern void show_title(Rect *r, int xres, int yres);
 
+
+
 void render()
 {
 	Rect r;
+	Rect stats;
 	glClear(GL_COLOR_BUFFER_BIT);
 	//
     // setting up the title screen
     if (gl.title_screen) {
-        //r.bot = gl.yres / 2;
-        //r.left = gl.xres / 2 - 100;
-        //r.center = 1;
-
-        //centering the title screen 
-        //r.center = 30;
-        //r.bot = gl.yres / 2 + 60;
-        //r.left = gl.xres/2;
-
-        //ggprint8b(&r, 24, 0x00ffff00, "Graveyard Survival");
-
-        //r.bot = gl.yres / 2 + 30;
-        //ggprint8b(&r, 16, 0x00ffff00, "press any key to start");
-        // any other instructions we want to give to the player
         show_title(&r, gl.xres, gl.yres);
+
         return;
     }
+	stats.bot = 0;
+	stats.left = gl.xres-140;
+	stats.center = 0;
+	show_player_hearts(&stats, gl.yres, 5);
+
     
 
 	r.bot = gl.yres - 20;
@@ -854,9 +853,13 @@ void render()
 	ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
 	ggprint8b(&r, 16, 0x00ffff00, "n asteroids: %i", g.nasteroids);
     ggprint8b(&r, 16, 0x00ff00ff, "c for credits: ");
+
     if (gl.credits) {
         show_all(&r, gl.xres, gl.yres);
     }
+
+
+
     //show_diego(&r);
 	//-------------------------------------------------------------------------
 	//Draw the ship
