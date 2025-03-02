@@ -36,7 +36,7 @@ void show_title(Rect *r, int xres, int yres)
 }
 
 
-void draw_iris() 
+void pos_iris() 
 {
-    // let's start with something blocky
+    
 }

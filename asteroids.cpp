@@ -1,4 +1,4 @@
-//
+///
 //program: asteroids.cpp
 //author:  Gordon Griesel
 //date:    2014 - 2025
@@ -58,8 +58,69 @@ extern double physicsCountdown;
 extern double timeSpan;
 extern double timeDiff(struct timespec *start, struct timespec *end);
 extern void timeCopy(struct timespec *dest, struct timespec *source);
-//-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+// importing images class
+class Image {
+public:
+    int width, height;
+    unsigned char *data;
+    ~Image() { delete [] data; }
+    Image(const char *fname) {
+        if (fname[0] == '\0')
+            return;
+        //printf("fname **%s**\n", fname);
+        int ppmFlag = 0;
+        char name[40];
+        strcpy(name, fname);
+        int slen = strlen(name);
+        char ppmname[80];
+        if (strncmp(name+(slen-4), ".ppm", 4) == 0)
+            ppmFlag = 1;
+        if (ppmFlag) {
+            strcpy(ppmname, name);
+        } else {
+            name[slen-4] = '\0';
+            //printf("name **%s**\n", name);
+            sprintf(ppmname,"%s.ppm", name);
+            //printf("ppmname **%s**\n", ppmname);
+            char ts[100];
+            //system("convert eball.jpg eball.ppm");
+            sprintf(ts, "convert %s %s", fname, ppmname);
+            system(ts);
+        }
+        //sprintf(ts, "%s", name);
+        FILE *fpi = fopen(ppmname, "r");
+        if (fpi) {
+            char line[200];
+            fgets(line, 200, fpi);
+            fgets(line, 200, fpi);
+            //skip comments and blank lines
+            while (line[0] == '#' || strlen(line) < 2)
+                fgets(line, 200, fpi);
+            sscanf(line, "%i %i", &width, &height);
+            fgets(line, 200, fpi);
+            //get pixel data
+            int n = width * height * 3;
+            data = new unsigned char[n];
+            for (int i=0; i<n; i++)
+                data[i] = fgetc(fpi);
+            fclose(fpi);
+        } else {
+            printf("ERROR opening image: %s\n",ppmname);
+            exit(0);
+        }
+        if (!ppmFlag)
+            unlink(ppmname);
+    }
+};
+Image img[1] = {
+"./images/WitchF.png"
+//"./images/witch.jpg"
+};
+
+
+//------------------------------------------------------------------------
 class Global {
 public:
 	int xres, yres;
@@ -68,6 +129,8 @@ public:
     int credits;
     int title_screen;
     bool game_started;
+    GLuint witch_texture;
+    bool show_witch;
 	Global() {
 		xres = 640;
 		yres = 480;
@@ -77,6 +140,7 @@ public:
         credits = 0;
         title_screen = 1;
         game_started = false;
+        show_witch = false;
 	}
 } gl;
 
@@ -129,6 +193,12 @@ public:
 		next = NULL;
 	}
 };
+
+class Witch {
+public:
+    Vec pos;
+    Vec vel;
+} witch;
 
 class Game {
 public:
@@ -323,6 +393,7 @@ void check_mouse(XEvent *e);
 int check_keys(XEvent *e);
 void physics();
 void render();
+void init();
 
 //==========================================================================
 // M A I N
@@ -331,6 +402,7 @@ int main()
 {
 	logOpen();
 	init_opengl();
+    init();
 	srand(time(NULL));
 	clock_gettime(CLOCK_REALTIME, &timePause);
 	clock_gettime(CLOCK_REALTIME, &timeStart);
@@ -359,6 +431,51 @@ int main()
 	logClose();
 	return 0;
 }
+//------------------------------------------------
+//from rainforest framework
+unsigned char *buildAlphaData(Image *img)
+{
+    //Add 4th component to an RGB stream...
+    //RGBA
+    //When you do this, OpenGL is able to use the A component to determine
+    //transparency information.
+    //It is used in this application to erase parts of a texture-map from view.
+    int i;
+    int a,b,c;
+    unsigned char *newdata, *ptr;
+    unsigned char *data = (unsigned char *)img->data;
+    newdata = (unsigned char *)malloc(img->width * img->height * 4);
+    ptr = newdata;
+    for (i=0; i<img->width * img->height * 3; i+=3) {
+        a = *(data+0);
+        b = *(data+1);
+        c = *(data+2);
+        *(ptr+0) = a;
+        *(ptr+1) = b;
+        *(ptr+2) = c;
+        //-----------------------------------------------
+        //get largest color component...
+        //*(ptr+3) = (unsigned char)((
+        //      (int)*(ptr+0) +
+        //      (int)*(ptr+1) +
+        //      (int)*(ptr+2)) / 3);
+        //d = a;
+        //if (b >= a && b >= c) d = b;
+        //if (c >= a && c >= b) d = c;
+        //*(ptr+3) = d;
+        //-----------------------------------------------
+        //this code optimizes the commented code above.
+        //code contributed by student: Chris Smith
+        //
+        *(ptr+3) = (a|b|c);
+        //-----------------------------------------------
+        ptr += 4;
+        data += 3;
+    }
+    return newdata;
+}
+//-----------------------------------------------------------------
+
 
 void init_opengl(void)
 {
@@ -380,6 +497,47 @@ void init_opengl(void)
 	//Do this to allow fonts
 	glEnable(GL_TEXTURE_2D);
 	initialize_fonts();
+
+    //------------------------------------
+    //code from rainforest to get images
+    //
+    //load the images file into a ppm structure.
+    //
+    //bigfootImage     = ppm6GetImage("./images/bigfoot.ppm");
+    //forestImage      = ppm6GetImage("./images/forest.ppm");
+    //forestTransImage = ppm6GetImage("./images/forestTrans.ppm");
+    //umbrellaImage    = ppm6GetImage("./images/umbrella.ppm");
+    //create opengl texture elements
+    glGenTextures(1, &gl.witch_texture);
+    //----------------------------------------------
+    //witch
+    //
+    int w = img[0].width;
+    int h = img[0].height;
+    //
+    glBindTexture(GL_TEXTURE_2D, gl.witch_texture);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    //------------------------------------------------------------------
+    // attempting to remove the white box
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+   // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //---------------------------------------------------------------------
+    // so this image one doesn't deal with transparency.
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+       GL_RGB, GL_UNSIGNED_BYTE, img[0].data);
+     //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+      //GL_RGBA, GL_UNSIGNED_BYTE, img[0].data);
+    //  could be used for transcparecny
+    //-------------------------------------
+}
+void init() {
+    //makes it move around, for now we just want to see it
+    MakeVector(-150.0,180.0,0.0, witch.pos);
+    MakeVector(6.0,0.0,0.0, witch.vel);
 }
 
 void normalize2d(Vec v)
@@ -453,7 +611,7 @@ void check_mouse(XEvent *e)
 		savey = e->xbutton.y;
 		if (++ct < 10)
 			return;		
-		//std::cout << "savex: " << savex << std::endl << std::flush;
+        //std::cout << "savex: " << savex << std::endl << std::flush;
 		//std::cout << "e->xbutton.x: " << e->xbutton.x << std::endl <<
 		//std::flush;
 		//
@@ -531,6 +689,10 @@ int check_keys(XEvent *e)
             if (!gl.game_started) {
                 gl.title_screen = !gl.title_screen;
                 gl.game_started = true;
+                gl.show_witch = true;
+                if (gl.show_witch) {
+                    witch.pos[0] = -250;
+                }
                 break;
             }
            // gl.title_screen = !gl.title_screen;
@@ -559,6 +721,32 @@ int check_keys(XEvent *e)
 	}
 	return 0;
 }
+
+void move_witch()
+{
+    //move bigfoot...
+    int addgrav = 1;
+    //Update position
+    witch.pos[0] += witch.vel[0];
+    witch.pos[1] += witch.vel[1];
+    //Check for collision with window edges
+    if ((witch.pos[0] < -140.0 && witch.vel[0] < 0.0) ||
+        (witch.pos[0] >= (float)gl.xres+140.0 &&
+        witch.vel[0] > 0.0))
+    {
+        witch.vel[0] = -witch.vel[0];
+        addgrav = 0;
+    }
+    if ((witch.pos[1] < 150.0 && witch.vel[1] < 0.0) ||
+        (witch.pos[1] >= (float)gl.yres && witch.vel[1] > 0.0)) {
+        witch.vel[1] = -witch.vel[1];
+        addgrav = 0;
+    }
+    //Gravity?
+    if (addgrav)
+        witch.vel[1] -= 0.75;
+}
+
 
 void deleteAsteroid(Game *g, Asteroid *node)
 {
@@ -615,6 +803,9 @@ void buildAsteroidFragment(Asteroid *ta, Asteroid *a)
 
 void physics()
 {
+    if(gl.show_witch) {
+        move_witch();
+    }
 	Flt d0,d1,dist;
 	//Update ship position
 	g.ship.pos[0] += g.ship.vel[0];
@@ -824,7 +1015,7 @@ void physics()
 //  and instead did all the work in another file
 extern void show_all(Rect *r, int xres, int yres);
 extern void show_title(Rect *r, int xres, int yres);
-
+extern void pos_iris();
 
 
 void render()
@@ -834,6 +1025,7 @@ void render()
 	glClear(GL_COLOR_BUFFER_BIT);
 	//
     // setting up the title screen
+    
     if (gl.title_screen) {
         show_title(&r, gl.xres, gl.yres);
 
@@ -843,9 +1035,9 @@ void render()
 	stats.left = gl.xres-140;
 	stats.center = 0;
 	show_player_hearts(&stats, gl.yres, 5);
-
-    
-
+///-----------------------------------------------
+    float wid = 120.0f;
+////---------------------------------------------
 	r.bot = gl.yres - 20;
 	r.left = 10;
 	r.center = 0;
@@ -857,28 +1049,26 @@ void render()
     if (gl.credits) {
         show_all(&r, gl.xres, gl.yres);
     }
-
-
-
-    //show_diego(&r);
+    /// moving the witch to the bottom.
 	//-------------------------------------------------------------------------
 	//Draw the ship
-	glColor3fv(g.ship.color);
+    glColor3fv(g.ship.color);
 	glPushMatrix();
 	glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
 	//float angle = atan2(ship.dir[1], ship.dir[0]);
 	glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-	glBegin(GL_TRIANGLES);
+    glBegin(GL_TRIANGLES);
 	//glVertex2f(-10.0f, -10.0f);
 	//glVertex2f(  0.0f, 20.0f);
 	//glVertex2f( 10.0f, -10.0f);
-	glVertex2f(-12.0f, -10.0f);
-	glVertex2f(  0.0f,  20.0f);
-	glVertex2f(  0.0f,  -6.0f);
-	glVertex2f(  0.0f,  -6.0f);
-	glVertex2f(  0.0f,  20.0f);
-	glVertex2f( 12.0f, -10.0f);
-	glEnd();
+    glColor3f(1.0f, 1.0f, 1.0f);
+	glVertex2f(-12.0f, -10.0f); // bottom left
+	glVertex2f(  0.0f,  20.0f); // top left
+	glVertex2f(  0.0f,  -10.0f); // bottom left center changing from -6 to -10
+	glVertex2f(  0.0f,  -10.0f); //bottom right center same as above
+	glVertex2f(  0.0f,  20.0f); // top right
+	glVertex2f( 12.0f, -10.0f); // bottom right
+    glEnd();
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glBegin(GL_POINTS);
 	glVertex2f(0.0f, 0.0f);
@@ -952,6 +1142,38 @@ void render()
 		glVertex2f(b->pos[0]+1.0f, b->pos[1]+1.0f);
 		glEnd();
 	}
+//--------------------------------------------------------------------------
+//draw witch
+glColor3f(1.0, 1.0, 1.0);
+    //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+//glEnable(GL_BLEND);
+//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//glEnable(GL_ALPHA_TEST);
+//glAlphaFunc(GL_GREATER, 0.1f);
+    if(gl.show_witch) {
+        glPushMatrix();
+        glTranslatef(witch.pos[0], witch.pos[1], witch.pos[2]);
+        glBindTexture(GL_TEXTURE_2D, gl.witch_texture);
+ //       glColor3f(1.0f,0.0f,0.0f);
+   // }
+    glBegin(GL_QUADS);
+    if(witch.vel[0] > 0.0) {
+        glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+        glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+
+    } else {
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+        glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+        glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+    }
+    glEnd();
+    glPopMatrix();
+}
+//glDisable(GL_ALPHA_TEST);
+
 }
 
 
