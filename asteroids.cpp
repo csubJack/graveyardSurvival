@@ -197,12 +197,28 @@ public:
 class Witch {
 public:
     Vec pos;
+    Vec dir;
     Vec vel;
-} witch;
+    Vec acc;
+    float angle;
+ //witch;
+public:
+    Witch() {
+     pos[0] = (Flt)(gl.xres/2);
+        pos[1] = (Flt)(gl.yres/2);
+        pos[2] = 0.0f;
+        VecZero(dir);
+        VecZero(vel);
+        VecZero(acc);
+        angle = 0.0;
+    }
+};
+
 
 class Game {
 public:
-	Ship ship;
+	//Ship ship;
+    Witch witch;
 	Asteroid *ahead;
 	Bullet *barr;
 	int nasteroids;
@@ -393,7 +409,8 @@ void check_mouse(XEvent *e);
 int check_keys(XEvent *e);
 void physics();
 void render();
-void init();
+// removed from now it 
+//void init();
 
 //==========================================================================
 // M A I N
@@ -402,7 +419,7 @@ int main()
 {
 	logOpen();
 	init_opengl();
-    init();
+    //init();
 	srand(time(NULL));
 	clock_gettime(CLOCK_REALTIME, &timePause);
 	clock_gettime(CLOCK_REALTIME, &timeStart);
@@ -534,11 +551,12 @@ void init_opengl(void)
     //  could be used for transcparecny
     //-------------------------------------
 }
-void init() {
+// only for witch lone movement
+//void init() {
     //makes it move around, for now we just want to see it
-    MakeVector(-150.0,180.0,0.0, witch.pos);
-    MakeVector(6.0,0.0,0.0, witch.vel);
-}
+//    MakeVector(-150.0,180.0,0.0, witch.pos);
+//    MakeVector(6.0,0.0,0.0, witch.vel);
+//}
 
 void normalize2d(Vec v)
 {
@@ -578,12 +596,12 @@ void check_mouse(XEvent *e)
 				if (g.nbullets < MAX_BULLETS) {
 					Bullet *b = &g.barr[g.nbullets];
 					timeCopy(&b->time, &bt);
-					b->pos[0] = g.ship.pos[0];
-					b->pos[1] = g.ship.pos[1];
-					b->vel[0] = g.ship.vel[0];
-					b->vel[1] = g.ship.vel[1];
+					b->pos[0] = g.witch.pos[0];
+					b->pos[1] = g.witch.pos[1];
+					b->vel[0] = g.witch.vel[0];
+					b->vel[1] = g.witch.vel[1];
 					//convert ship angle to radians
-					Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+					Flt rad = ((g.witch.angle+90.0) / 360.0f) * PI * 2.0;
 					//convert angle to a vector
 					Flt xdir = cos(rad);
 					Flt ydir = sin(rad);
@@ -622,32 +640,32 @@ void check_mouse(XEvent *e)
 		//printf("mouse move "); fflush(stdout);
 		if (xdiff > 0) {
 			//std::cout << "xdiff: " << xdiff << std::endl << std::flush;
-			g.ship.angle += 0.05f * (float)xdiff;
-			if (g.ship.angle >= 360.0f)
-				g.ship.angle -= 360.0f;
+			g.witch.angle += 0.05f * (float)xdiff;
+			if (g.witch.angle >= 360.0f)
+				g.witch.angle -= 360.0f;
 		}
 		else if (xdiff < 0) {
 			//std::cout << "xdiff: " << xdiff << std::endl << std::flush;
-			g.ship.angle += 0.05f * (float)xdiff;
-			if (g.ship.angle < 0.0f)
-				g.ship.angle += 360.0f;
+			g.witch.angle += 0.05f * (float)xdiff;
+			if (g.witch.angle < 0.0f)
+				g.witch.angle += 360.0f;
 		}
 		if (ydiff > 0) {
 			//apply thrust
 			//convert ship angle to radians
-			Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+			Flt rad = ((g.witch.angle+90.0) / 360.0f) * PI * 2.0;
 			//convert angle to a vector
 			Flt xdir = cos(rad);
 			Flt ydir = sin(rad);
-			g.ship.vel[0] += xdir * (float)ydiff * 0.01f;
-			g.ship.vel[1] += ydir * (float)ydiff * 0.01f;
-			Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
-												g.ship.vel[1]*g.ship.vel[1]);
+			g.witch.vel[0] += xdir * (float)ydiff * 0.01f;
+			g.witch.vel[1] += ydir * (float)ydiff * 0.01f;
+			Flt speed = sqrt(g.witch.vel[0]*g.witch.vel[0]+
+												g.witch.vel[1]*g.witch.vel[1]);
 			if (speed > 10.0f) {
 				speed = 10.0f;
-				normalize2d(g.ship.vel);
-				g.ship.vel[0] *= speed;
-				g.ship.vel[1] *= speed;
+				normalize2d(g.witch.vel);
+				g.witch.vel[0] *= speed;
+				g.witch.vel[1] *= speed;
 			}
 			g.mouseThrustOn = true;
 			clock_gettime(CLOCK_REALTIME, &g.mouseThrustTimer);
@@ -690,9 +708,9 @@ int check_keys(XEvent *e)
                 gl.title_screen = !gl.title_screen;
                 gl.game_started = true;
                 gl.show_witch = true;
-                if (gl.show_witch) {
-                    witch.pos[0] = -250;
-                }
+               // if (gl.show_witch) {
+                 //   witch.pos[0] = -250;
+               // }
                 break;
             }
            // gl.title_screen = !gl.title_screen;
@@ -721,31 +739,31 @@ int check_keys(XEvent *e)
 	}
 	return 0;
 }
-
-void move_witch()
-{
+// keeping this for main screen
+//void move_witch()
+//{
     //move bigfoot...
-    int addgrav = 1;
+//    int addgrav = 1;
     //Update position
-    witch.pos[0] += witch.vel[0];
-    witch.pos[1] += witch.vel[1];
+//    witch.pos[0] += witch.vel[0];
+//    witch.pos[1] += witch.vel[1];
     //Check for collision with window edges
-    if ((witch.pos[0] < -140.0 && witch.vel[0] < 0.0) ||
-        (witch.pos[0] >= (float)gl.xres+140.0 &&
-        witch.vel[0] > 0.0))
-    {
-        witch.vel[0] = -witch.vel[0];
-        addgrav = 0;
-    }
-    if ((witch.pos[1] < 150.0 && witch.vel[1] < 0.0) ||
-        (witch.pos[1] >= (float)gl.yres && witch.vel[1] > 0.0)) {
-        witch.vel[1] = -witch.vel[1];
-        addgrav = 0;
-    }
+//    if ((witch.pos[0] < -140.0 && witch.vel[0] < 0.0) ||
+//        (witch.pos[0] >= (float)gl.xres+140.0 &&
+//        witch.vel[0] > 0.0))
+//    {
+//        witch.vel[0] = -witch.vel[0];
+//        addgrav = 0;
+//    }
+//    if ((witch.pos[1] < 150.0 && witch.vel[1] < 0.0) ||
+//        (witch.pos[1] >= (float)gl.yres && witch.vel[1] > 0.0)) {
+//        witch.vel[1] = -witch.vel[1];
+//        addgrav = 0;
+ //   }
     //Gravity?
-    if (addgrav)
-        witch.vel[1] -= 0.75;
-}
+//    if (addgrav)
+//        witch.vel[1] -= 0.75;
+//}
 
 
 void deleteAsteroid(Game *g, Asteroid *node)
@@ -803,25 +821,26 @@ void buildAsteroidFragment(Asteroid *ta, Asteroid *a)
 
 void physics()
 {
-    if(gl.show_witch) {
-        move_witch();
-    }
+//keep this for main screen
+//    if(gl.show_witch) {
+ //       move_witch();
+//    }
 	Flt d0,d1,dist;
 	//Update ship position
-	g.ship.pos[0] += g.ship.vel[0];
-	g.ship.pos[1] += g.ship.vel[1];
+	g.witch.pos[0] += g.witch.vel[0];
+	g.witch.pos[1] += g.witch.vel[1];
 	//Check for collision with window edges
-	if (g.ship.pos[0] < 0.0) {
-		g.ship.pos[0] += (float)gl.xres;
+	if (g.witch.pos[0] < 0.0) {
+		g.witch.pos[0] += (float)gl.xres;
 	}
-	else if (g.ship.pos[0] > (float)gl.xres) {
-		g.ship.pos[0] -= (float)gl.xres;
+	else if (g.witch.pos[0] > (float)gl.xres) {
+		g.witch.pos[0] -= (float)gl.xres;
 	}
-	else if (g.ship.pos[1] < 0.0) {
-		g.ship.pos[1] += (float)gl.yres;
+	else if (g.witch.pos[1] < 0.0) {
+		g.witch.pos[1] += (float)gl.yres;
 	}
-	else if (g.ship.pos[1] > (float)gl.yres) {
-		g.ship.pos[1] -= (float)gl.yres;
+	else if (g.witch.pos[1] > (float)gl.yres) {
+		g.witch.pos[1] -= (float)gl.yres;
 	}
 	//
 	//
@@ -940,32 +959,33 @@ void physics()
 	}
 	//---------------------------------------------------
 	//check keys pressed now
+    //current g.ship.angle, changing that gl.witch.angle and so on
 	if (gl.keys[XK_Left]) {
-		g.ship.angle += 4.0;
-		if (g.ship.angle >= 360.0f)
-			g.ship.angle -= 360.0f;
+		g.witch.angle += 4.0;
+		if (g.witch.angle >= 360.0f)
+			g.witch.angle -= 360.0f;
 	}
 	if (gl.keys[XK_Right]) {
-		g.ship.angle -= 4.0;
-		if (g.ship.angle < 0.0f)
-			g.ship.angle += 360.0f;
+		g.witch.angle -= 4.0;
+		if (g.witch.angle < 0.0f)
+			g.witch.angle += 360.0f;
 	}
 	if (gl.keys[XK_Up]) {
 		//apply thrust
 		//convert ship angle to radians
-		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+		Flt rad = ((g.witch.angle+90.0) / 360.0f) * PI * 2.0;
 		//convert angle to a vector
 		Flt xdir = cos(rad);
 		Flt ydir = sin(rad);
-		g.ship.vel[0] += xdir*0.02f;
-		g.ship.vel[1] += ydir*0.02f;
-		Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
-				g.ship.vel[1]*g.ship.vel[1]);
+		g.witch.vel[0] += xdir*0.02f;
+		g.witch.vel[1] += ydir*0.02f;
+		Flt speed = sqrt(g.witch.vel[0]*g.witch.vel[0]+
+				g.witch.vel[1]*g.witch.vel[1]);
 		if (speed > 10.0f) {
 			speed = 10.0f;
-			normalize2d(g.ship.vel);
-			g.ship.vel[0] *= speed;
-			g.ship.vel[1] *= speed;
+			normalize2d(g.witch.vel);
+			g.witch.vel[0] *= speed;
+			g.witch.vel[1] *= speed;
 		}
 	}
 	if (gl.keys[XK_space]) {
@@ -980,12 +1000,12 @@ void physics()
 				//Bullet *b = new Bullet;
 				Bullet *b = &g.barr[g.nbullets];
 				timeCopy(&b->time, &bt);
-				b->pos[0] = g.ship.pos[0];
-				b->pos[1] = g.ship.pos[1];
-				b->vel[0] = g.ship.vel[0];
-				b->vel[1] = g.ship.vel[1];
+				b->pos[0] = g.witch.pos[0];
+				b->pos[1] = g.witch.pos[1];
+				b->vel[0] = g.witch.vel[0];
+				b->vel[1] = g.witch.vel[1];
 				//convert ship angle to radians
-				Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+				Flt rad = ((g.witch.angle+90.0) / 360.0f) * PI * 2.0;
 				//convert angle to a vector
 				Flt xdir = cos(rad);
 				Flt ydir = sin(rad);
@@ -1052,49 +1072,49 @@ void render()
     /// moving the witch to the bottom.
 	//-------------------------------------------------------------------------
 	//Draw the ship
-    glColor3fv(g.ship.color);
-	glPushMatrix();
-	glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
+//    glColor3fv(g.ship.color);
+//	glPushMatrix();
+//	glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
 	//float angle = atan2(ship.dir[1], ship.dir[0]);
-	glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-    glBegin(GL_TRIANGLES);
+//	glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
+//    glBegin(GL_TRIANGLES);
 	//glVertex2f(-10.0f, -10.0f);
 	//glVertex2f(  0.0f, 20.0f);
 	//glVertex2f( 10.0f, -10.0f);
-    glColor3f(1.0f, 1.0f, 1.0f);
-	glVertex2f(-12.0f, -10.0f); // bottom left
-	glVertex2f(  0.0f,  20.0f); // top left
-	glVertex2f(  0.0f,  -10.0f); // bottom left center changing from -6 to -10
-	glVertex2f(  0.0f,  -10.0f); //bottom right center same as above
-	glVertex2f(  0.0f,  20.0f); // top right
-	glVertex2f( 12.0f, -10.0f); // bottom right
-    glEnd();
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glBegin(GL_POINTS);
-	glVertex2f(0.0f, 0.0f);
-	glEnd();
-	glPopMatrix();
-	if (gl.keys[XK_Up] || g.mouseThrustOn) {
-		int i;
-		//draw thrust
-		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-		//convert angle to a vector
-		Flt xdir = cos(rad);
-		Flt ydir = sin(rad);
-		Flt xs,ys,xe,ye,r;
-		glBegin(GL_LINES);
-		for (i=0; i<16; i++) {
-			xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
-			ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
-			r = rnd()*40.0+40.0;
-			xe = -xdir * r + rnd() * 18.0 - 9.0;
-			ye = -ydir * r + rnd() * 18.0 - 9.0;
-			glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
-			glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
-			glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
-		}
-		glEnd();
-	}
+//    glColor3f(1.0f, 1.0f, 1.0f);
+//	glVertex2f(-12.0f, -10.0f); // bottom left
+//	glVertex2f(  0.0f,  20.0f); // top left
+//	glVertex2f(  0.0f,  -10.0f); // bottom left center changing from -6 to -10
+//	glVertex2f(  0.0f,  -10.0f); //bottom right center same as above
+//	glVertex2f(  0.0f,  20.0f); // top right
+//	glVertex2f( 12.0f, -10.0f); // bottom right
+//    glEnd();
+//	glColor3f(1.0f, 0.0f, 0.0f);
+//	glBegin(GL_POINTS);
+//	glVertex2f(0.0f, 0.0f);
+//	glEnd();
+//	glPopMatrix();
+//	if (gl.keys[XK_Up] || g.mouseThrustOn) {
+//		int i;
+//		//draw thrust
+//		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+//		//convert angle to a vector
+//		Flt xdir = cos(rad);
+//		Flt ydir = sin(rad);
+//		Flt xs,ys,xe,ye,r;
+//		glBegin(GL_LINES);
+//		for (i=0; i<16; i++) {
+//			xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
+//			ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
+//			r = rnd()*40.0+40.0;
+//			xe = -xdir * r + rnd() * 18.0 - 9.0;
+//			ye = -ydir * r + rnd() * 18.0 - 9.0;
+//			glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
+//			glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
+//			glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
+//		}
+//		glEnd();
+//	}
 	//-------------------------------------------------------------------------
 	//Draw the asteroids
 	{
@@ -1145,6 +1165,7 @@ void render()
 //--------------------------------------------------------------------------
 //draw witch
 glColor3f(1.0, 1.0, 1.0);
+//glRotatef(g.witch.angle, 0.0f, 0.0f, 1.0f);
     //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 //glEnable(GL_BLEND);
 //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1152,12 +1173,15 @@ glColor3f(1.0, 1.0, 1.0);
 //glAlphaFunc(GL_GREATER, 0.1f);
     if(gl.show_witch) {
         glPushMatrix();
-        glTranslatef(witch.pos[0], witch.pos[1], witch.pos[2]);
+        // adding in the g.
+        glTranslatef(g.witch.pos[0], g.witch.pos[1], g.witch.pos[2]);
+        // rotate the witch in here
+        glRotatef(g.witch.angle, 0.0f, 0.0f, 1.0f);
         glBindTexture(GL_TEXTURE_2D, gl.witch_texture);
  //       glColor3f(1.0f,0.0f,0.0f);
    // }
     glBegin(GL_QUADS);
-    if(witch.vel[0] > 0.0) {
+    if(g.witch.vel[0] > 0.0) {
         glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
         glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
         glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
@@ -1171,6 +1195,29 @@ glColor3f(1.0, 1.0, 1.0);
     }
     glEnd();
     glPopMatrix();
+
+    if (gl.keys[XK_Up] || g.mouseThrustOn) {
+        int i;
+        //draw thrust
+        Flt rad = ((g.witch.angle+90.0) / 360.0f) * PI * 2.0;
+        //convert angle to a vector
+        Flt xdir = cos(rad);
+        Flt ydir = sin(rad);
+        Flt xs,ys,xe,ye,r;
+        glBegin(GL_LINES);
+        for (i=0; i<16; i++) {
+            xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
+            ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
+            r = rnd()*40.0+40.0;
+            xe = -xdir * r + rnd() * 18.0 - 9.0;
+            ye = -ydir * r + rnd() * 18.0 - 9.0;
+            glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
+            glVertex2f(g.witch.pos[0]+xs,g.witch.pos[1]+ys);
+            glVertex2f(g.witch.pos[0]+xe,g.witch.pos[1]+ye);
+        }
+        glEnd();
+    }
+
 }
 //glDisable(GL_ALPHA_TEST);
 
