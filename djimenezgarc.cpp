@@ -35,8 +35,3 @@ void show_title(Rect *r, int xres, int yres)
     ggprint8b(r, 16, 0x00ff00ff, "space to fire");
 }
 
-
-void pos_iris() 
-{
-    
-}

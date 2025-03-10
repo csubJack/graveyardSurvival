@@ -114,9 +114,10 @@ public:
             unlink(ppmname);
     }
 };
-Image img[1] = {
-"./images/WitchF.png"
-//"./images/witch.jpg"
+Image img[2] = {
+"./images/WitchF.png",
+"./images/hat.png"
+//./images/witch.jpg"
 };
 
 
@@ -128,8 +129,10 @@ public:
 	int mouse_cursor_on;
     int credits;
     int title_screen;
+    int title_hat;
     bool game_started;
     GLuint witch_texture;
+    GLuint hat_texture;
     bool show_witch;
 	Global() {
 		xres = 640;
@@ -213,6 +216,12 @@ public:
         angle = 0.0;
     }
 };
+
+class Hat {
+public:
+    Vec pos;
+    Vec vel;
+} hat;
 
 
 class Game {
@@ -410,7 +419,7 @@ int check_keys(XEvent *e);
 void physics();
 void render();
 // removed from now it 
-//void init();
+void init();
 
 //==========================================================================
 // M A I N
@@ -419,7 +428,7 @@ int main()
 {
 	logOpen();
 	init_opengl();
-    //init();
+    init();
 	srand(time(NULL));
 	clock_gettime(CLOCK_REALTIME, &timePause);
 	clock_gettime(CLOCK_REALTIME, &timeStart);
@@ -526,9 +535,10 @@ void init_opengl(void)
     //umbrellaImage    = ppm6GetImage("./images/umbrella.ppm");
     //create opengl texture elements
     glGenTextures(1, &gl.witch_texture);
+    glGenTextures(1, &gl.hat_texture);
     //----------------------------------------------
     //witch
-    //
+    // moving this down for testing
     int w = img[0].width;
     int h = img[0].height;
     //
@@ -540,23 +550,41 @@ void init_opengl(void)
     // attempting to remove the white box
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-   // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // putting in the gltext clamp below
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     //---------------------------------------------------------------------
     // so this image one doesn't deal with transparency.
     glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
        GL_RGB, GL_UNSIGNED_BYTE, img[0].data);
-     //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-      //GL_RGBA, GL_UNSIGNED_BYTE, img[0].data);
+    //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+    //glAlphaFunc(GL_GREATER, 0.1f);
+    //int w = img[0].width;
+    //int h = img[0].height;
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+     //        GL_RGBA, GL_UNSIGNED_BYTE, img[0].data);
     //  could be used for transcparecny
     //-------------------------------------
+    //for out hat
+    w = img[1].width;
+    h = img[1].height;
+    glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+        GL_RGB, GL_UNSIGNED_BYTE, img[1].data);
+
 }
 // only for witch lone movement
-//void init() {
+void init() {
     //makes it move around, for now we just want to see it
-//    MakeVector(-150.0,180.0,0.0, witch.pos);
-//    MakeVector(6.0,0.0,0.0, witch.vel);
-//}
+    //modifying the numbers for vel
+    //6 0 0 0, to 6 15 0
+    MakeVector(-150.0,180.0,0.0, hat.pos);
+    MakeVector(6.0,15.0,0.0, hat.vel);
+}
 
 void normalize2d(Vec v)
 {
@@ -708,8 +736,8 @@ int check_keys(XEvent *e)
                 gl.title_screen = !gl.title_screen;
                 gl.game_started = true;
                 gl.show_witch = true;
-               // if (gl.show_witch) {
-                 //   witch.pos[0] = -250;
+                //if (gl.title_witch) {
+                //    witch.pos[0] = -250;
                // }
                 break;
             }
@@ -740,30 +768,30 @@ int check_keys(XEvent *e)
 	return 0;
 }
 // keeping this for main screen
-//void move_witch()
-//{
-    //move bigfoot...
-//    int addgrav = 1;
+void move_hat()
+{
+    //move hat
+    int addgrav = 1;
     //Update position
-//    witch.pos[0] += witch.vel[0];
-//    witch.pos[1] += witch.vel[1];
+    hat.pos[0] += hat.vel[0];
+    hat.pos[1] += hat.vel[1];
     //Check for collision with window edges
-//    if ((witch.pos[0] < -140.0 && witch.vel[0] < 0.0) ||
-//        (witch.pos[0] >= (float)gl.xres+140.0 &&
-//        witch.vel[0] > 0.0))
-//    {
-//        witch.vel[0] = -witch.vel[0];
-//        addgrav = 0;
-//    }
-//    if ((witch.pos[1] < 150.0 && witch.vel[1] < 0.0) ||
-//        (witch.pos[1] >= (float)gl.yres && witch.vel[1] > 0.0)) {
-//        witch.vel[1] = -witch.vel[1];
-//        addgrav = 0;
- //   }
+    if ((hat.pos[0] < -140.0 && hat.vel[0] < 0.0) ||
+        (hat.pos[0] >= (float)gl.xres+140.0 &&
+        hat.vel[0] > 0.0))
+    {
+        hat.vel[0] = -hat.vel[0];
+        addgrav = 0;
+    }
+    if ((hat.pos[1] < 150.0 && hat.vel[1] < 0.0) ||
+        (hat.pos[1] >= (float)gl.yres && hat.vel[1] > 0.0)) {
+        hat.vel[1] = -hat.vel[1];
+        addgrav = 0;
+    }
     //Gravity?
-//    if (addgrav)
-//        witch.vel[1] -= 0.75;
-//}
+    if (addgrav)
+        hat.vel[1] -= 0.75;
+}
 
 
 void deleteAsteroid(Game *g, Asteroid *node)
@@ -822,9 +850,9 @@ void buildAsteroidFragment(Asteroid *ta, Asteroid *a)
 void physics()
 {
 //keep this for main screen
-//    if(gl.show_witch) {
- //       move_witch();
-//    }
+    if(gl.title_hat) {
+        move_hat();
+    }
 	Flt d0,d1,dist;
 	//Update ship position
 	g.witch.pos[0] += g.witch.vel[0];
@@ -1035,7 +1063,7 @@ void physics()
 //  and instead did all the work in another file
 extern void show_all(Rect *r, int xres, int yres);
 extern void show_title(Rect *r, int xres, int yres);
-extern void pos_iris();
+//extern void show_title_witch(int xres, int yres, Witch &witch);
 
 
 void render()
@@ -1044,19 +1072,52 @@ void render()
 	Rect stats;
 	glClear(GL_COLOR_BUFFER_BIT);
 	//
+    float wid = 120;
+    //
     // setting up the title screen
-    
     if (gl.title_screen) {
         show_title(&r, gl.xres, gl.yres);
+        gl.title_hat = 1;
+        glColor3f(1.0, 1.0, 1.0);
+        glEnable(GL_TEXTURE_2D);
+    if(gl.title_hat) {
+        //glEnable(GL_TEXTURE_2D);
+        glPushMatrix();
+        // adding in the g.
+        glTranslatef(hat.pos[0], hat.pos[1], hat.pos[2]);
+        // rotate the witch in here
+     //   glRotatef(hat.angle, 0.0f, 0.0f, 1.0f);
+        glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
+   // }
+    glBegin(GL_QUADS);
+    if(g.witch.vel[0] > 0.0) {
+        glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+        glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
 
+    } else {
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+        glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+        glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+    }
+    glEnd();
+    glPopMatrix();
+
+        //gl.title_hat = 1;
+     //   hat.pos[0] = -250;
+        //gl.show_witch = true;
+        move_hat();
         return;
     }
+}
 	stats.bot = 0;
 	stats.left = gl.xres-140;
 	stats.center = 0;
 	show_player_hearts(&stats, gl.yres, 5);
 ///-----------------------------------------------
-    float wid = 120.0f;
+    //float wid = 120.0f;
 ////---------------------------------------------
 	r.bot = gl.yres - 20;
 	r.left = 10;
@@ -1165,13 +1226,17 @@ void render()
 //--------------------------------------------------------------------------
 //draw witch
 glColor3f(1.0, 1.0, 1.0);
+//glColor4f(1.0, 1.0, 1.0, 1.0);
 //glRotatef(g.witch.angle, 0.0f, 0.0f, 1.0f);
     //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+glEnable(GL_TEXTURE_2D);
 //glEnable(GL_BLEND);
 //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 //glEnable(GL_ALPHA_TEST);
 //glAlphaFunc(GL_GREATER, 0.1f);
     if(gl.show_witch) {
+        //glEnable(GL_TEXTURE_2D);
         glPushMatrix();
         // adding in the g.
         glTranslatef(g.witch.pos[0], g.witch.pos[1], g.witch.pos[2]);
