@@ -131,6 +131,11 @@ public:
     bool game_started;
     GLuint witch_texture;
     bool show_witch;
+
+	// Mouse Coordinates -Jack
+	float mouseXCoordinate;
+	float mouseYCoordinate;
+
 	Global() {
 		xres = 640;
 		yres = 480;
@@ -141,6 +146,12 @@ public:
         title_screen = 1;
         game_started = false;
         show_witch = false;
+
+		// Mouse Coordinates -Jack
+
+
+
+
 	}
 } gl;
 
@@ -553,6 +564,7 @@ void normalize2d(Vec v)
 	v[1] *= len;
 }
 
+
 void check_mouse(XEvent *e)
 {
 	//Did the mouse move?
@@ -562,6 +574,13 @@ void check_mouse(XEvent *e)
 	//
 	static int ct=0;
 	//std::cout << "m" << std::endl << std::flush;
+
+	// Fires if mouse moves, keeps player looking away from mouse
+	// TODO: ADD EXTRA MODE SO PLAYER IS FACING MOUSE
+	if (e->type == MotionNotify) {
+		g.ship.angle = update_player_angle(e->xmotion.x, g.ship.pos[0], e->xmotion.y, g.ship.pos[1]);
+	}
+
 	if (e->type == ButtonRelease) {
 		return;
 	}
@@ -899,33 +918,16 @@ void physics()
 			if (dist < (a->radius*a->radius)) {
 				//std::cout << "asteroid hit." << std::endl;
 				//this asteroid is hit.
-				if (a->radius > MINIMUM_ASTEROID_SIZE) {
-					//break it into pieces.
-					Asteroid *ta = a;
-					buildAsteroidFragment(ta, a);
-					int r = rand()%10+5;
-					for (int k=0; k<r; k++) {
-						//get the next asteroid position in the array
-						Asteroid *ta = new Asteroid;
-						buildAsteroidFragment(ta, a);
-						//add to front of asteroid linked list
-						ta->next = g.ahead;
-						if (g.ahead != NULL)
-							g.ahead->prev = ta;
-						g.ahead = ta;
-						g.nasteroids++;
-					}
-				} else {
 					a->color[0] = 1.0;
 					a->color[1] = 0.1;
 					a->color[2] = 0.1;
-					//asteroid is too small to break up
-					//delete the asteroid and bullet
+					
+                    //delete the asteroid and bullet
 					Asteroid *savea = a->next;
 					deleteAsteroid(&g, a);
 					a = savea;
 					g.nasteroids--;
-				}
+				
 				//delete the bullet...
 				memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
 				g.nbullets--;
