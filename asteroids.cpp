@@ -25,6 +25,7 @@
 #include "log.h"
 #include "fonts.h"
 
+
 //defined types
 typedef float Flt;
 typedef float Vec[3];
@@ -134,6 +135,11 @@ public:
     GLuint witch_texture;
     GLuint hat_texture;
     bool show_witch;
+
+	// Mouse Coordinates -Jack
+	float mouseXCoordinate;
+	float mouseYCoordinate;
+
 	Global() {
 		xres = 640;
 		yres = 480;
@@ -144,6 +150,12 @@ public:
         title_screen = 1;
         game_started = false;
         show_witch = false;
+
+		// Mouse Coordinates -Jack
+
+
+
+
 	}
 } gl;
 
@@ -599,6 +611,7 @@ void normalize2d(Vec v)
 	v[1] *= len;
 }
 
+
 void check_mouse(XEvent *e)
 {
 	//Did the mouse move?
@@ -608,6 +621,13 @@ void check_mouse(XEvent *e)
 	//
 	static int ct=0;
 	//std::cout << "m" << std::endl << std::flush;
+
+	// Fires if mouse moves, keeps player looking away from mouse
+	// TODO: ADD EXTRA MODE SO PLAYER IS FACING MOUSE
+	if (e->type == MotionNotify) {
+		g.ship.angle = update_player_angle(e->xmotion.x, g.ship.pos[0], e->xmotion.y, g.ship.pos[1]);
+	}
+
 	if (e->type == ButtonRelease) {
 		return;
 	}
@@ -850,28 +870,69 @@ void buildAsteroidFragment(Asteroid *ta, Asteroid *a)
 
 void physics()
 {
+
 //keep this for main screen
-    if(gl.title_hat) {
-        move_hat();
-    }
+//    if(gl.title_hat) {
+//        move_hat();
+//    }
+//	Flt d0,d1,dist;
+	//Update ship position
+//	g.witch.pos[0] += g.witch.vel[0];
+//	g.witch.pos[1] += g.witch.vel[1];
+//	//Check for collision with window edges
+//	if (g.witch.pos[0] < 0.0) {
+//		g.witch.pos[0] += (float)gl.xres;
+//	}
+//	else if (g.witch.pos[0] > (float)gl.xres) {
+//		g.witch.pos[0] -= (float)gl.xres;
+//	}
+//	else if (g.witch.pos[1] < 0.0) {
+//		g.witch.pos[1] += (float)gl.yres;
+//	}
+//	else if (g.witch.pos[1] > (float)gl.yres) {
+//		g.witch.pos[1] -= (float)gl.yres;
+//	}
+	//
+    
 	Flt d0,d1,dist;
 	//Update ship position
-	g.witch.pos[0] += g.witch.vel[0];
-	g.witch.pos[1] += g.witch.vel[1];
+	g.ship.pos[0] += g.ship.vel[0];
+	g.ship.pos[1] += g.ship.vel[1];
+
+    
 	//Check for collision with window edges
-	if (g.witch.pos[0] < 0.0) {
-		g.witch.pos[0] += (float)gl.xres;
-	}
-	else if (g.witch.pos[0] > (float)gl.xres) {
-		g.witch.pos[0] -= (float)gl.xres;
-	}
-	else if (g.witch.pos[1] < 0.0) {
-		g.witch.pos[1] += (float)gl.yres;
-	}
-	else if (g.witch.pos[1] > (float)gl.yres) {
-		g.witch.pos[1] -= (float)gl.yres;
-	}
-	//
+//	if (g.ship.pos[0] < 0.0) {
+//		g.ship.pos[0] += (float)gl.xres;
+//	}
+//	else if (g.ship.pos[0] > (float)gl.xres) {
+//		g.ship.pos[0] -= (float)gl.xres;
+//	}
+//	else if (g.ship.pos[1] < 0.0) {
+//		g.ship.pos[1] += (float)gl.yres;
+//	}
+//	else if (g.ship.pos[1] > (float)gl.yres) {
+//		g.ship.pos[1] -= (float)gl.yres;
+//	}
+    
+    // Add this new logic:
+if (g.ship.pos[0] < 0.0) {
+    g.ship.pos[0] = 0.0; // Stop at the left edge
+    g.ship.vel[0] = 0.0; // Set velocity to zero
+}
+else if (g.ship.pos[0] > (float)gl.xres) {
+    g.ship.pos[0] = (float)gl.xres; // Stop at the right edge
+    g.ship.vel[0] = 0.0; // Set velocity to zero
+}
+
+if (g.ship.pos[1] < 0.0) {
+    g.ship.pos[1] = 0.0; // Stop at the bottom edge
+    g.ship.vel[1] = 0.0; // Set velocity to zero
+}
+else if (g.ship.pos[1] > (float)gl.yres) {
+    g.ship.pos[1] = (float)gl.yres; // Stop at the top edge
+    g.ship.vel[1] = 0.0; // Set velocity to zero
+}
+
 	//
 	//Update bullet positions
 	struct timespec bt;
@@ -947,33 +1008,16 @@ void physics()
 			if (dist < (a->radius*a->radius)) {
 				//std::cout << "asteroid hit." << std::endl;
 				//this asteroid is hit.
-				if (a->radius > MINIMUM_ASTEROID_SIZE) {
-					//break it into pieces.
-					Asteroid *ta = a;
-					buildAsteroidFragment(ta, a);
-					int r = rand()%10+5;
-					for (int k=0; k<r; k++) {
-						//get the next asteroid position in the array
-						Asteroid *ta = new Asteroid;
-						buildAsteroidFragment(ta, a);
-						//add to front of asteroid linked list
-						ta->next = g.ahead;
-						if (g.ahead != NULL)
-							g.ahead->prev = ta;
-						g.ahead = ta;
-						g.nasteroids++;
-					}
-				} else {
 					a->color[0] = 1.0;
 					a->color[1] = 0.1;
 					a->color[2] = 0.1;
-					//asteroid is too small to break up
-					//delete the asteroid and bullet
+					
+                    //delete the asteroid and bullet
 					Asteroid *savea = a->next;
 					deleteAsteroid(&g, a);
 					a = savea;
 					g.nasteroids--;
-				}
+				
 				//delete the bullet...
 				memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
 				g.nbullets--;
@@ -1006,16 +1050,29 @@ void physics()
 		//convert angle to a vector
 		Flt xdir = cos(rad);
 		Flt ydir = sin(rad);
-		g.witch.vel[0] += xdir*0.02f;
-		g.witch.vel[1] += ydir*0.02f;
-		Flt speed = sqrt(g.witch.vel[0]*g.witch.vel[0]+
-				g.witch.vel[1]*g.witch.vel[1]);
-		if (speed > 10.0f) {
-			speed = 10.0f;
-			normalize2d(g.witch.vel);
-			g.witch.vel[0] *= speed;
-			g.witch.vel[1] *= speed;
-		}
+//<<<<<<< HEAD
+//		g.witch.vel[0] += xdir*0.02f;
+//		g.witch.vel[1] += ydir*0.02f;
+//		Flt speed = sqrt(g.witch.vel[0]*g.witch.vel[0]+
+///				g.witch.vel[1]*g.witch.vel[1]);
+//		if (speed > 10.0f) {
+//			speed = 10.0f;
+//			normalize2d(g.witch.vel);
+//			g.witch.vel[0] *= speed;
+//			g.witch.vel[1] *= speed;
+//		}
+//=======
+		g.ship.vel[0] += xdir * 0.02f;
+		g.ship.vel[1] += ydir * 0.02f;
+//		Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
+//				g.ship.vel[1]*g.ship.vel[1]);
+//		if (speed > 10.0f) {
+//			speed = 10.0f;
+//			normalize2d(g.ship.vel);
+//			g.ship.vel[0] *= speed;
+//			g.ship.vel[1] *= speed;
+//		}
+//>>>>>>> beb0caab74c4906839a48d5e19981039e5940f30
 	}
 	if (gl.keys[XK_space]) {
 		//a little time between each bullet
@@ -1066,6 +1123,8 @@ extern void show_all(Rect *r, int xres, int yres,
  float delta_time, int credits_activation);
 extern void show_title(Rect *r, int xres, int yres);
 //extern void show_title_witch(int xres, int yres, Witch &witch);
+
+extern void levelText(Rect *r);
 
 
 void render()
@@ -1124,7 +1183,8 @@ void render()
 	r.bot = gl.yres - 20;
 	r.left = 10;
 	r.center = 0;
-	ggprint8b(&r, 16, 0x00ff0000, "3350 - Asteroids");
+
+	levelText(&r);
 	ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
 	ggprint8b(&r, 16, 0x00ffff00, "n asteroids: %i", g.nasteroids);
     ggprint8b(&r, 16, 0x00ff00ff, "c for credits: ");
@@ -1144,6 +1204,7 @@ void render()
 	//glVertex2f(-10.0f, -10.0f);
 	//glVertex2f(  0.0f, 20.0f);
 	//glVertex2f( 10.0f, -10.0f);
+//<<<<<<< HEAD
 //    glColor3f(1.0f, 1.0f, 1.0f);
 //	glVertex2f(-12.0f, -10.0f); // bottom left
 //	glVertex2f(  0.0f,  20.0f); // top left
@@ -1179,6 +1240,24 @@ void render()
 //		glEnd();
 //	}
 	//-------------------------------------------------------------------------
+//=======
+    glColor3f(1.0f, 1.0f, 1.0f);
+	glVertex2f(-12.0f, -10.0f); // bottom left
+	glVertex2f(  0.0f,  20.0f); // top left
+	glVertex2f(  0.0f,  -10.0f); // bottom left center changing from -6 to -10
+	glVertex2f(  0.0f,  -10.0f); //bottom right center same as above
+	glVertex2f(  0.0f,  20.0f); // top right
+	glVertex2f( 12.0f, -10.0f); // bottom right
+    glEnd();
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glBegin(GL_POINTS);
+	glVertex2f(0.0f, 0.0f);
+	glEnd();
+	glPopMatrix();
+	
+    
+    //-------------------------------------------------------------------------
+//>>>>>>> beb0caab74c4906839a48d5e19981039e5940f30
 	//Draw the asteroids
 	{
 		Asteroid *a = g.ahead;

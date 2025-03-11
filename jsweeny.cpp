@@ -3,6 +3,8 @@
 // INCLUDES
 #include "fonts.h"
 #include "jsweeny.h"
+#include <cmath>
+
 
 void show_player_hearts (Rect *r, int yres, int playerHealth)
 {
@@ -16,6 +18,14 @@ void show_player_hearts (Rect *r, int yres, int playerHealth)
 
         // Add score Here and other Game metrics as needed
     }
+}
+
+float update_player_angle (float xCoordinate, float xPlayer,float yCoordinate, float yPlayer) 
+{
+	float x = xCoordinate - xPlayer;
+	float y = yCoordinate - yPlayer;
+	return atan2(x,y) * (180 / M_PI);
+	// std::cout << g.ship.angle << std::endl;
 }
 
 // void collision_detection (float shipXPosition, float shipYPosition, ) 
