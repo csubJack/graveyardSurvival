@@ -1,4 +1,10 @@
 // empty file for now
+
+#include <iostream>
+#include <stdio.h>
+#include <stdlib.h>
+using namespace std;
+
 void zombieHealthBar()
 {
     int zombieHealth = 7;
