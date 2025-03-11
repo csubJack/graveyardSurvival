@@ -25,6 +25,7 @@
 #include "log.h"
 #include "fonts.h"
 
+
 //defined types
 typedef float Flt;
 typedef float Vec[3];
@@ -829,20 +830,40 @@ void physics()
 	//Update ship position
 	g.ship.pos[0] += g.ship.vel[0];
 	g.ship.pos[1] += g.ship.vel[1];
+
+    
 	//Check for collision with window edges
-	if (g.ship.pos[0] < 0.0) {
-		g.ship.pos[0] += (float)gl.xres;
-	}
-	else if (g.ship.pos[0] > (float)gl.xres) {
-		g.ship.pos[0] -= (float)gl.xres;
-	}
-	else if (g.ship.pos[1] < 0.0) {
-		g.ship.pos[1] += (float)gl.yres;
-	}
-	else if (g.ship.pos[1] > (float)gl.yres) {
-		g.ship.pos[1] -= (float)gl.yres;
-	}
-	//
+//	if (g.ship.pos[0] < 0.0) {
+//		g.ship.pos[0] += (float)gl.xres;
+//	}
+//	else if (g.ship.pos[0] > (float)gl.xres) {
+//		g.ship.pos[0] -= (float)gl.xres;
+//	}
+//	else if (g.ship.pos[1] < 0.0) {
+//		g.ship.pos[1] += (float)gl.yres;
+//	}
+//	else if (g.ship.pos[1] > (float)gl.yres) {
+//		g.ship.pos[1] -= (float)gl.yres;
+//	}
+    
+    // Add this new logic:
+if (g.ship.pos[0] < 0.0) {
+    g.ship.pos[0] = 0.0; // Stop at the left edge
+    g.ship.vel[0] = 0.0; // Set velocity to zero
+}
+else if (g.ship.pos[0] > (float)gl.xres) {
+    g.ship.pos[0] = (float)gl.xres; // Stop at the right edge
+    g.ship.vel[0] = 0.0; // Set velocity to zero
+}
+
+if (g.ship.pos[1] < 0.0) {
+    g.ship.pos[1] = 0.0; // Stop at the bottom edge
+    g.ship.vel[1] = 0.0; // Set velocity to zero
+}
+else if (g.ship.pos[1] > (float)gl.yres) {
+    g.ship.pos[1] = (float)gl.yres; // Stop at the top edge
+    g.ship.vel[1] = 0.0; // Set velocity to zero
+}
 	//
 	//Update bullet positions
 	struct timespec bt;
