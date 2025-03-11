@@ -1038,6 +1038,8 @@ extern void show_all(Rect *r, int xres, int yres);
 extern void show_title(Rect *r, int xres, int yres);
 extern void pos_iris();
 
+extern void levelText(Rect *r);
+
 
 void render()
 {
@@ -1062,7 +1064,8 @@ void render()
 	r.bot = gl.yres - 20;
 	r.left = 10;
 	r.center = 0;
-	ggprint8b(&r, 16, 0x00ff0000, "3350 - Asteroids");
+
+	levelText(&r);
 	ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
 	ggprint8b(&r, 16, 0x00ffff00, "n asteroids: %i", g.nasteroids);
     ggprint8b(&r, 16, 0x00ff00ff, "c for credits: ");
