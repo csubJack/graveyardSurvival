@@ -823,9 +823,7 @@ void buildAsteroidFragment(Asteroid *ta, Asteroid *a)
 
 void physics()
 {
-    if(gl.show_witch) {
-        move_witch();
-    }
+    
 	Flt d0,d1,dist;
 	//Update ship position
 	g.ship.pos[0] += g.ship.vel[0];
@@ -980,16 +978,16 @@ else if (g.ship.pos[1] > (float)gl.yres) {
 		//convert angle to a vector
 		Flt xdir = cos(rad);
 		Flt ydir = sin(rad);
-		g.ship.vel[0] += xdir*0.02f;
-		g.ship.vel[1] += ydir*0.02f;
-		Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
-				g.ship.vel[1]*g.ship.vel[1]);
-		if (speed > 10.0f) {
-			speed = 10.0f;
-			normalize2d(g.ship.vel);
-			g.ship.vel[0] *= speed;
-			g.ship.vel[1] *= speed;
-		}
+		g.ship.vel[0] += xdir * 0.02f;
+		g.ship.vel[1] += ydir * 0.02f;
+//		Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
+//				g.ship.vel[1]*g.ship.vel[1]);
+//		if (speed > 10.0f) {
+//			speed = 10.0f;
+//			normalize2d(g.ship.vel);
+//			g.ship.vel[0] *= speed;
+//			g.ship.vel[1] *= speed;
+//		}
 	}
 	if (gl.keys[XK_space]) {
 		//a little time between each bullet
@@ -1097,28 +1095,9 @@ void render()
 	glVertex2f(0.0f, 0.0f);
 	glEnd();
 	glPopMatrix();
-	if (gl.keys[XK_Up] || g.mouseThrustOn) {
-		int i;
-		//draw thrust
-		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-		//convert angle to a vector
-		Flt xdir = cos(rad);
-		Flt ydir = sin(rad);
-		Flt xs,ys,xe,ye,r;
-		glBegin(GL_LINES);
-		for (i=0; i<16; i++) {
-			xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
-			ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
-			r = rnd()*40.0+40.0;
-			xe = -xdir * r + rnd() * 18.0 - 9.0;
-			ye = -ydir * r + rnd() * 18.0 - 9.0;
-			glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
-			glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
-			glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
-		}
-		glEnd();
-	}
-	//-------------------------------------------------------------------------
+	
+    
+    //-------------------------------------------------------------------------
 	//Draw the asteroids
 	{
 		Asteroid *a = g.ahead;
