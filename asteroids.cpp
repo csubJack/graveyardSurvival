@@ -115,7 +115,7 @@ public:
     }
 };
 Image img[2] = {
-"./images/WitchF.png",
+"./images/zombie3.png",
 "./images/hat.png"
 //./images/witch.jpg"
 };
@@ -749,12 +749,13 @@ int check_keys(XEvent *e)
 			break;
         case XK_c:
             // credits
-           // if (gl.credits == 0)
-             //   gl.credits = 1;
-           // else
-             //   gl.credits = 0;
+            if (!gl.credits) {
+                gl.credits = 1;
+            } else {
+                gl.credits = 0;
+            }
            // safest way
-           gl.credits = !gl.credits;
+           //gl.credits = !gl.credits;
            break;
 		case XK_s:
 			break;
@@ -1061,7 +1062,8 @@ void physics()
 
 // added int xres and int yres so as to not cluter anything up here
 //  and instead did all the work in another file
-extern void show_all(Rect *r, int xres, int yres);
+extern void show_all(Rect *r, int xres, int yres,
+ float delta_time, int credits_activation);
 extern void show_title(Rect *r, int xres, int yres);
 //extern void show_title_witch(int xres, int yres, Witch &witch);
 
@@ -1128,7 +1130,7 @@ void render()
     ggprint8b(&r, 16, 0x00ff00ff, "c for credits: ");
 
     if (gl.credits) {
-        show_all(&r, gl.xres, gl.yres);
+        show_all(&r, gl.xres, gl.yres, timeSpan, gl.credits);
     }
     /// moving the witch to the bottom.
 	//-------------------------------------------------------------------------
