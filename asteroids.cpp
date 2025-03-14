@@ -129,6 +129,7 @@ public:
     int credits;
     int title_screen;
     int title_hat;
+    int character_screen;
     bool game_started;
     //GLuint witch_texture;
     GLuint hat_texture;
@@ -146,6 +147,7 @@ public:
 		mouse_cursor_on = 1;
         credits = 0;
         title_screen = 1;
+        character_screen = 0;
         game_started = false;
         //show_witch = false;
 
@@ -428,9 +430,14 @@ void check_mouse(XEvent *e);
 int check_keys(XEvent *e);
 void physics();
 void render();
+void title_render();
+void character_screen_render();
 // removed from now it 
 void init();
-
+// animation rest
+void reset_game_animation();
+void reset_title_animation();
+void init_asteroids();
 //==========================================================================
 // M A I N
 //==========================================================================
@@ -445,6 +452,8 @@ int main()
 	x11.set_mouse_position(200, 200);
 	x11.show_mouse_cursor(gl.mouse_cursor_on);
 	int done=0;
+    // adding in
+    bool previous_game_state = gl.game_started;
 	while (!done) {
 		while (x11.getXPending()) {
 			XEvent e = x11.getXNextEvent();
@@ -460,7 +469,24 @@ int main()
 			physics();
 			physicsCountdown -= physicsRate;
 		}
-		render();
+        if (gl.game_started != previous_game_state) {
+            if (gl.game_started) {
+                reset_game_animation();
+            } else {
+                reset_title_animation();
+            }
+            previous_game_state = gl.game_started;
+        }
+        if (gl.game_started) {
+            render();
+        }
+		if (!gl.game_started) {
+            title_render();
+        }
+        //if(gl.character_screen) {
+          //  character_screen_render();
+       // }
+        //render();
 		x11.swapBuffers();
 	}
 	cleanup_fonts();
@@ -512,7 +538,65 @@ unsigned char *buildAlphaData(Image *img)
 }
 //-----------------------------------------------------------------
 
+// resseting variables
+void reset_game_animation() {
+    g.ship.pos[0] = gl.xres / 2;
+    g.ship.pos[1] = gl.yres / 2;
+    g.ship.vel[0] = 0.0f;
+    g.ship.vel[1] = 0.0f;
+    g.nbullets = 0; // clears bullets
+    
+    // removing the exitising asteroids
+    while (g.ahead) {
+        Asteroid *temp = g.ahead;
+        g.ahead = g.ahead->next;
+        free(temp);
+    }
+    init_asteroids(); // reinitialize asteroids
+}
 
+void reset_title_animation() {
+    // resetting the hat
+    init();
+}
+void init_asteroids()
+{
+    g.ahead = 0;
+    g.nasteroids = 0;
+    //build 10 asteroids...
+    for (int j=0; j<10; j++) {
+        Asteroid *a = new Asteroid;
+        a->nverts = 8;
+		a->radius = rnd()*80.0 + 40.0;
+		Flt r2 = a->radius / 2.0;
+		Flt angle = 0.0f;
+		Flt inc = (PI * 2.0) / (Flt)a->nverts;
+		for (int i=0; i<a->nverts; i++) {
+            a->vert[i][0] = sin(angle) * (r2 + rnd() * a->radius);
+			a->vert[i][1] = cos(angle) * (r2 + rnd() * a->radius);
+			angle += inc;
+        }
+        a->pos[0] = (Flt)(rand() % gl.xres);
+		a->pos[1] = (Flt)(rand() % gl.yres);
+		a->pos[2] = 0.0f;
+		a->angle = 0.0;
+		a->rotate = rnd() * 4.0 - 2.0;
+		a->color[0] = 0.8;
+		a->color[1] = 0.8;
+		a->color[2] = 0.7;
+		a->vel[0] = (Flt)(rnd()*2.0-1.0);
+		a->vel[1] = (Flt)(rnd()*2.0-1.0);
+		//std::cout << "asteroid" << std::endl;
+		//add to front of linked list
+		a->next = g.ahead;
+        if (g.ahead != NULL)
+			g.ahead->prev = a;
+		g.ahead = a;
+		++g.nasteroids;
+		}
+}
+
+//
 void init_opengl(void)
 {
 	//OpenGL initialization
@@ -749,7 +833,7 @@ int check_keys(XEvent *e)
 	switch (key) {
 		case XK_Escape:
 			return 1;
-        case XK_space:
+        case XK_space:  // removing for the moment && !gl.character_screen
             if (!gl.game_started) {
                 gl.title_screen = !gl.title_screen;
                 gl.game_started = true;
@@ -774,6 +858,26 @@ int check_keys(XEvent *e)
             }
            // safest way
            //gl.credits = !gl.credits;
+           break;
+        case XK_t:
+           if(gl.game_started) {
+               gl.game_started = !gl.game_started;
+               gl.title_screen = !gl.title_screen;
+           }
+           break;
+        case XK_k:
+           //if (gl.game_started) {
+            //   gl.game_started = false;
+               //gl.title_screen = 0;
+            //   gl.character_screen = true;
+          // }
+          // if (gl.character_screen) {
+            //   //gl.game_started = true;
+            //   gl.character_screen = false;
+             //  gl.game_started = true;
+          // }
+           //gl.game_started = false;
+           //gl.title_screen = !gl.title_screen;
            break;
 		case XK_s:
 			break;
@@ -1107,34 +1211,89 @@ else if (g.ship.pos[1] > (float)gl.yres) {
 extern void show_all(Rect *r, int xres, int yres,
  float delta_time, int credits_activation);
 extern void show_title(Rect *r, int xres, int yres);
-//extern void show_title_witch(int xres, int yres, Witch &witch);
-
+//extern void draw_Iris(Rect *r,int xres, int yres);
+extern void show_character_screen(Rect *r, int xres, int yres);
 extern void levelText(Rect *r);
 
-
-void render()
+void draw_ship() 
 {
-	Rect r;
-	Rect stats;
-	glClear(GL_COLOR_BUFFER_BIT);
-	//
-    float wid = 120;
+    //Draw the ship
+    glColor3fv(g.ship.color);
+    glPushMatrix();
+    glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
+    //-----------------------------------------------------
+    // I think this was part of the original code,
+    // but it's not being used for anything now
     //
-    // setting up the title screen
-    if (gl.title_screen) {
+    //float angle = atan2(g.ship.dir[1], g.ship.dir[0]);
+    //
+    //------------------------------------------------
+    glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
+    glBegin(GL_TRIANGLES);
+    glVertex2f(-10.0f, -10.0f);
+    glVertex2f(  0.0f, 20.0f);
+    glVertex2f( 10.0f, -10.0f);
+
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glVertex2f(-12.0f, -10.0f); // bottom left
+    glVertex2f(  0.0f,  20.0f); // top left
+    glVertex2f(  0.0f,  -10.0f); // bottom left center changing from -6 to -10
+    glVertex2f(  0.0f,  -10.0f); //bottom right center same as above
+    glVertex2f(  0.0f,  20.0f); // top right
+    glVertex2f( 12.0f, -10.0f); // bottom right
+    glEnd();
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glBegin(GL_POINTS);
+    glVertex2f(0.0f, 0.0f);
+    glEnd();
+    glPopMatrix();
+    if (gl.keys[XK_Up] || g.mouseThrustOn) {
+        int i;
+        //draw thrust
+        Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+        //convert angle to a vector
+        Flt xdir = cos(rad);
+        Flt ydir = sin(rad);
+        Flt xs,ys,xe,ye,r;
+        glBegin(GL_LINES);
+        for (i=0; i<16; i++) {
+            xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
+            ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
+            r = rnd()*40.0+40.0;
+            xe = -xdir * r + rnd() * 18.0 - 9.0;
+            ye = -ydir * r + rnd() * 18.0 - 9.0;
+            glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
+            glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
+            glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
+        }
+        glEnd();
+    }
+
+}
+void character_screen_render() 
+{
+    Rect r;
+    show_character_screen(&r, gl.xres, gl.yres);
+}
+
+void title_render() 
+{
+    Rect r;
+//    Rect stats;
+    float wid = 120;
+    glClear(GL_COLOR_BUFFER_BIT);
+    if(!gl.game_started) {
+         if (gl.title_screen) {
         show_title(&r, gl.xres, gl.yres);
+        //draw_Iris(&r, gl.xres, gl.yres);
         gl.title_hat = 1;
         glColor3f(1.0, 1.0, 1.0);
         glEnable(GL_TEXTURE_2D);
     if(gl.title_hat) {
-        //glEnable(GL_TEXTURE_2D);
         glPushMatrix();
-        // adding in the g.
         glTranslatef(hat.pos[0], hat.pos[1], hat.pos[2]);
-        // rotate the witch in here
-     //   glRotatef(hat.angle, 0.0f, 0.0f, 1.0f);
         glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
-   // }
+    }
     glBegin(GL_QUADS);
     if(g.ship.vel[0] > 0.0) {
         glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
@@ -1150,14 +1309,68 @@ void render()
     }
     glEnd();
     glPopMatrix();
-
-        //gl.title_hat = 1;
-     //   hat.pos[0] = -250;
-        //gl.show_witch = true;
-        move_hat();
-        return;
     }
+         //glDisable(GL_TEXTURE_2D);
+         move_hat();
+     //    return;
+    }
+    //glDisable(GL_TEXTURE_2D);
 }
+
+void render()
+{
+        
+	Rect r;
+	Rect stats;
+	glClear(GL_COLOR_BUFFER_BIT);
+	//----------------------------------
+    // so this used to be used for only the title screen
+    // but we can keep here if someone want's to use
+    // it for something else
+  //  float wid = 120;
+    //
+    //----------------------------------
+//    //
+//    if(!gl.game_started) {
+//    // setting up the title screen
+//    if (gl.title_screen) {
+//        show_title(&r, gl.xres, gl.yres);
+//        //draw_Iris(&r, gl.xres, gl.yres);
+//        gl.title_hat = 1;
+//        glColor3f(1.0, 1.0, 1.0);
+//        glEnable(GL_TEXTURE_2D);
+//    if(gl.title_hat) {
+//        glPushMatrix();
+//        glTranslatef(hat.pos[0], hat.pos[1], hat.pos[2]);
+//        glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
+//   // }
+//    glBegin(GL_QUADS);
+//    if(g.ship.vel[0] > 0.0) {
+//        glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+//        glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+//        glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+//        glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+//
+//    } else {
+//        glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+//        glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+//        glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+//        glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+//    }
+//    glEnd();
+//    glPopMatrix();
+//
+//        move_hat();
+//        return;
+//    }
+//}
+    //if(gl.character_screen) {
+      //  show_character_screen(&r, gl.xres, gl.yres);
+      //  draw_Iris(g.ship);
+//}
+//} 
+
+if (gl.game_started) {
 	stats.bot = 0;
 	stats.left = gl.xres-140;
 	stats.center = 0;
@@ -1177,10 +1390,10 @@ void render()
     if (gl.credits) {
         show_all(&r, gl.xres, gl.yres, timeSpan, gl.credits);
     }
-    /// moving the witch to the bottom.
 	//-------------------------------------------------------------------------
 	//Draw the ship
-    glColor3fv(g.ship.color);
+    draw_ship();
+    /*glColor3fv(g.ship.color);
 	glPushMatrix();
 	glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
 	float angle = atan2(g.ship.dir[1], g.ship.dir[0]);
@@ -1223,10 +1436,11 @@ void render()
 			glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
 		}
 		glEnd();
-	}
+	} */
 	//----------------------------------------------------------------------
 	//Draw the asteroids
 	{
+        //if (gl.game_started) {
 		Asteroid *a = g.ahead;
 		while (a) {
 			//Log("draw asteroid...\n");
@@ -1251,6 +1465,7 @@ void render()
 			glEnd();
 			a = a->next;
 		}
+    //}
 	}
 	//-------------------------------------------------------------------------
 	//Draw the bullets
@@ -1272,4 +1487,5 @@ void render()
 		glEnd();
 	}
 //--------------------------------------------------------------------------
+}
 }

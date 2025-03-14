@@ -2,6 +2,7 @@
 //
 //
 #include "fonts.h"
+#include <GL/glx.h>
 
 void show_all(Rect *r, int xres, int yres,
         float delta_time, int credits_activation)
@@ -65,8 +66,68 @@ void show_title(Rect *r, int xres, int yres)
     ggprint8b(r, 16, 0x00ff00ff, "space to fire");
 }
 
-//void draw_Iris(Rect *r, int xres, int yres) 
+
+void show_character_screen(Rect *r, int xres, int yres) 
+{
+//    int char_arr[10];
+    r->center = 30;
+    r->bot = yres / 2 + 120;
+    r->left = xres/2;
+    glClear(GL_COLOR_BUFFER_BIT);
+    glColor3f(0.0, 0.0, 0.0);
+    glEnable(GL_TEXTURE_2D);
+
+
+
+
+}
+
+
+//void draw_Iris(class g.ship) 
 //{
+
+    ////glDisable(GL_TEXTURE_2D);
+    //glPushMatrix();
+    ////glLoadIdentity();
+    //glColor3f(1.0,0.0,1.0);
+    //glBegin(GL_TRIANGLES);
+    //glPolygonMode(GL_FRONT, GL_LINE);
+    //glLineWidth(4);
+    //glBegin(GL_QUADS_STRIP);
+    //glVertex2f(-0.25, 0.5);
+    //glVertex2f(-0.25, -0.25);
+    //glVertex2f(0.0, 0.0);
+    //glVertex2f(0.0, -.25);
+    //glVertex2f(0.25, 0.25);
+    //glVertex2f(0.25, -0.25);
+    //glEnd();
+    
+    //glVertex2f(-10.0f, -10.0f);
+	//glVertex2f(  0.0f, 20.0f);
+	//glVertex2f( 10.0f, -10.0f);
+    //glColor3f(1.0f, 1.0f, 1.0f);
+    //glVertex2f(-12.0f, -10.0f); // bottom left
+	//glVertex2f(  0.0f,  20.0f); // top left
+	//glVertex2f(  0.0f,  -10.0f); // bottom left center changing from -6 to -10
+	//glVertex2f(  0.0f,  -10.0f); //bottom right center same as above
+	//glVertex2f(  0.0f,  20.0f); // top right
+	//glVertex2f( 12.0f, -10.0f); // bottom right
+    //glEnd();
+	//glColor3f(1.0f, 0.0f, 0.0f);
+	//glBegin(GL_POINTS);
+	//glVertex2f(0.0f, 0.0f);
+	//glEnd();
+    //glPopMatrix();  
+    //glEnable(GL_TEXTURE_2D);
     //glColor3fv();
+  //  GLunit vbo;
+  //  glGenBuffers(1, &vbo); // generates one buffer
+  //  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+   // float vertices[] = {
+     //   0.0f, 0.5f,
+     //   0.5f, -0.5f,
+    //    -0.5f, -0.5f
+   // };
+   // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 //}
 
