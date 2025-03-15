@@ -705,8 +705,8 @@ void handle_shot() {
 					Flt sideY = xdir;
 
 
-					Flt rightOffset = 25.0f;
-					Flt leftOffset = -25.0f;
+					Flt rightOffset = 18.0f;
+					Flt leftOffset = -18.0f;
 
 					if (lastShot == 0) {
 						// Right pistol shoots
@@ -762,7 +762,6 @@ void check_mouse(XEvent *e)
 		if (e->xbutton.button==1) {
 			//Left button is down
 			//a little time between each bullet
-			struct timespec bt;
 				if (g.nbullets < MAX_BULLETS) {
 					handle_shot();	
 				}
