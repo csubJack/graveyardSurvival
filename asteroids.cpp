@@ -49,7 +49,8 @@ const float timeslice = 1.0f;
 const float gravity = -0.2f;
 #define PI 3.141592653589793
 #define ALPHA 1
-const int MAX_BULLETS = 11;
+const int MAX_BULLETS = 22; // Doubled due to 2 pistols
+int lastShot = 0; // right gun is zero
 const Flt MINIMUM_ASTEROID_SIZE = 60.0;
 
 //-----------------------------------------------------------------------------
@@ -118,8 +119,10 @@ public:
             unlink(ppmname);
     }
 };
-Image img[1] = {
-"./images/hat.png"
+
+Image img[2] = {
+"./images/hat.png",
+"./images/standing-still.png"
 };
 
 
@@ -134,7 +137,7 @@ public:
     int title_hat;
     int character_screen;
     bool game_started;
-    //GLuint witch_texture;
+    GLuint witch_texture;
     GLuint hat_texture;
     //bool show_witch;
 
@@ -153,12 +156,6 @@ public:
         character_screen = 0;
         game_started = false;
         //show_witch = false;
-
-		// Mouse Coordinates -Jack
-
-
-
-
 	}
 } gl;
 
@@ -212,26 +209,6 @@ public:
 	}
 };
 
-//class Witch {
-//public:
- //   Vec pos;
-//    Vec dir;
- //   Vec vel;
- //   Vec acc;
-  //  float angle;
- //witch;
-//public:
-//    Witch() {
-//     pos[0] = (Flt)(gl.xres/2);
-//        pos[1] = (Flt)(gl.yres/2);
-//        pos[2] = 0.0f;
-//        VecZero(dir);
-//        VecZero(vel);
-//        VecZero(acc);
-//        angle = 0.0;
-//    }
-//};
-
 class Hat {
 public:
     Vec pos;
@@ -247,7 +224,7 @@ public:
 	Bullet *barr;
 	int nasteroids;
 	int nbullets;
-	struct timespec bulletTimer;
+	// struct timespec bulletTimer;
 	struct timespec mouseThrustTimer;
 	bool mouseThrustOn;
 public:
@@ -288,12 +265,63 @@ public:
 			ahead = a;
 			++nasteroids;
 		}
-		clock_gettime(CLOCK_REALTIME, &bulletTimer);
+		// clock_gettime(CLOCK_REALTIME, &bulletTimer);
 	}
 	~Game() {
 		delete [] barr;
 	}
 } g;
+
+GLuint playerTexture;
+// Jack
+void loadPlayerIcon() {
+
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glGenTextures(1, &playerTexture);
+
+	if (!playerTexture) {
+		std::cerr << "Player Texture Empty 1" << std::endl;
+	}
+	glEnable(GL_TEXTURE_2D);
+	// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+
+	glBindTexture(GL_TEXTURE_2D, playerTexture);
+
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,img[1].width, img[1].height, 0,GL_RGB, GL_UNSIGNED_BYTE, img[1].data);	
+	
+}
+// Jack
+void renderPLayerIcon(float playerX, float playerY, float playerSize, float playerAngle) {
+	glPushMatrix();
+
+	// Fixed the Red issue
+	glColor3f(1.0, 1.0, 1.0);
+	
+	// move player
+	glTranslatef(playerX, playerY, 0.0f);
+
+	glRotatef(playerAngle, 0, 0, 1);
+
+	glBindTexture(GL_TEXTURE_2D, playerTexture);
+
+	glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 1.0f); glVertex2i(-playerSize / 2,-playerSize / 2);
+	    glTexCoord2f(0.0f, 0.0f); glVertex2i(-playerSize / 2,playerSize / 2);
+	    glTexCoord2f(1.0f, 0.0f); glVertex2i( playerSize / 2,playerSize / 2);
+	    glTexCoord2f(1.0f, 1.0f); glVertex2i( playerSize / 2,-playerSize / 2);
+	glEnd();
+
+	glPopMatrix();
+}
+
 
 //X Windows variables
 class X11_wrapper {
@@ -491,7 +519,6 @@ int main()
       //  }
         if (gl.game_started) {
             render();
-            //previous_game_state = gl.game_started;
         }
         // used to be !gl.game_started
 		if (gl.title_screen) {
@@ -635,47 +662,16 @@ void init_opengl(void)
 	initialize_fonts();
 
     //------------------------------------
-    //code from rainforest to get images
-    //
-    //load the images file into a ppm structure.
-    //
-    //bigfootImage     = ppm6GetImage("./images/bigfoot.ppm");
-    //forestImage      = ppm6GetImage("./images/forest.ppm");
-    //forestTransImage = ppm6GetImage("./images/forestTrans.ppm");
-    //umbrellaImage    = ppm6GetImage("./images/umbrella.ppm");
-    //create opengl texture elements
-  //  glGenTextures(1, &gl.witch_texture);
+	//Loading Player Icon
+
+	
     glGenTextures(1, &gl.hat_texture);
+	loadPlayerIcon();
+
     //----------------------------------------------
-    //witch
     // moving this down for testing
     int w = img[0].width;
     int h = img[0].height;
-    //
-    //glBindTexture(GL_TEXTURE_2D, gl.witch_texture);
-    //
-    //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-    //glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-    //------------------------------------------------------------------
-    // attempting to remove the white box
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // putting in the gltext clamp below
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    //---------------------------------------------------------------------
-    // so this image one doesn't deal with transparency.
-    //glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
-      // GL_RGB, GL_UNSIGNED_BYTE, img[0].data);
-    //glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-    //glAlphaFunc(GL_GREATER, 0.1f);
-    //int w = img[0].width;
-    //int h = img[0].height;
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-     //        GL_RGBA, GL_UNSIGNED_BYTE, img[0].data);
-    //  could be used for transcparecny
     //-------------------------------------
     //for out hat
     w = img[0].width;
@@ -710,6 +706,53 @@ void normalize2d(Vec v)
 }
 
 
+void handle_shot() {
+	// JAck
+	Bullet *b = &g.barr[g.nbullets];
+					//convert ship angle to radians
+					Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+					//convert angle to a vector
+					Flt xdir = cos(rad);
+					Flt ydir = sin(rad);
+
+					Flt sideX = -ydir;
+					Flt sideY = xdir;
+
+
+					Flt rightOffset = 18.0f;
+					Flt leftOffset = -18.0f;
+
+					if (lastShot == 0) {
+						// Right pistol shoots
+						b->pos[0] = g.ship.pos[0] + (sideX * rightOffset);
+						b->pos[1] = g.ship.pos[1] + (sideY * rightOffset);
+						b->vel[0] = g.ship.vel[0];
+						b->vel[1] = g.ship.vel[1];
+
+						
+						// b->pos[0] += xdir*20.0f;
+						// b->pos[1] += ydir*20.0f;
+						b->vel[0] += xdir*6.0f + rnd()*0.1;
+						b->vel[1] += ydir*6.0f + rnd()*0.1;
+						lastShot = 1;
+						
+					} else {
+						// Left pistol shoots
+
+						b->pos[0] = g.ship.pos[0] + (sideX * leftOffset);
+						b->pos[1] = g.ship.pos[1] + (sideY * leftOffset);
+						b->vel[0] = g.ship.vel[0];
+						b->vel[1] = g.ship.vel[1];
+					
+						b->vel[0] += xdir*6.0f + rnd()*0.1;
+						b->vel[1] += ydir*6.0f + rnd()*0.1;
+						lastShot = 0;
+					}
+
+					++g.nbullets;
+}
+
+
 void check_mouse(XEvent *e)
 {
 	//Did the mouse move?
@@ -734,34 +777,9 @@ void check_mouse(XEvent *e)
 		if (e->xbutton.button==1) {
 			//Left button is down
 			//a little time between each bullet
-			struct timespec bt;
-			clock_gettime(CLOCK_REALTIME, &bt);
-			double ts = timeDiff(&g.bulletTimer, &bt);
-			if (ts > 0.1) {
-				timeCopy(&g.bulletTimer, &bt);
-				//shoot a bullet...
 				if (g.nbullets < MAX_BULLETS) {
-					Bullet *b = &g.barr[g.nbullets];
-					timeCopy(&b->time, &bt);
-					b->pos[0] = g.ship.pos[0];
-					b->pos[1] = g.ship.pos[1];
-					b->vel[0] = g.ship.vel[0];
-					b->vel[1] = g.ship.vel[1];
-					//convert ship angle to radians
-					Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-					//convert angle to a vector
-					Flt xdir = cos(rad);
-					Flt ydir = sin(rad);
-					b->pos[0] += xdir*20.0f;
-					b->pos[1] += ydir*20.0f;
-					b->vel[0] += xdir*6.0f + rnd()*0.1;
-					b->vel[1] += ydir*6.0f + rnd()*0.1;
-					b->color[0] = 1.0f;
-					b->color[1] = 1.0f;
-					b->color[2] = 1.0f;
-					++g.nbullets;
+					handle_shot();	
 				}
-			}
 		}
 		if (e->xbutton.button==3) {
 			//Right button is down
@@ -776,12 +794,6 @@ void check_mouse(XEvent *e)
 		savey = e->xbutton.y;
 		if (++ct < 10)
 			return;		
-        //std::cout << "savex: " << savex << std::endl << std::flush;
-		//std::cout << "e->xbutton.x: " << e->xbutton.x << std::endl <<
-		//std::flush;
-		//
-		// If mouse cursor is on, it does not control the ship.
-		// It's a regular mouse.
 		if (gl.mouse_cursor_on)
 			return;
 		//printf("mouse move "); fflush(stdout);
@@ -804,17 +816,9 @@ void check_mouse(XEvent *e)
 			//convert angle to a vector
 			Flt xdir = cos(rad);
 			Flt ydir = sin(rad);
-			g.ship.vel[0] += xdir * (float)ydiff * 0.01f;
-			g.ship.vel[1] += ydir * (float)ydiff * 0.01f;
-			Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
-												g.ship.vel[1]*g.ship.vel[1]);
-			if (speed > 10.0f) {
-				speed = 10.0f;
-				normalize2d(g.ship.vel);
-				g.ship.vel[0] *= speed;
-				g.ship.vel[1] *= speed;
-			}
-			g.mouseThrustOn = true;
+			g.ship.pos[0] += xdir * 2.0f;
+			g.ship.pos[1] += ydir * 2.0f;
+			// g.mouseThrustOn = true;
 			clock_gettime(CLOCK_REALTIME, &g.mouseThrustTimer);
 		}
 		x11.set_mouse_position(200,200);
@@ -959,58 +963,9 @@ void deleteAsteroid(Game *g, Asteroid *node)
 	node = NULL;
 }
 
-void buildAsteroidFragment(Asteroid *ta, Asteroid *a)
-{
-	//build ta from a
-	ta->nverts = 8;
-	ta->radius = a->radius / 2.0;
-	Flt r2 = ta->radius / 2.0;
-	Flt angle = 0.0f;
-	Flt inc = (PI * 2.0) / (Flt)ta->nverts;
-	for (int i=0; i<ta->nverts; i++) {
-		ta->vert[i][0] = sin(angle) * (r2 + rnd() * ta->radius);
-		ta->vert[i][1] = cos(angle) * (r2 + rnd() * ta->radius);
-		angle += inc;
-	}
-	ta->pos[0] = a->pos[0] + rnd()*10.0-5.0;
-	ta->pos[1] = a->pos[1] + rnd()*10.0-5.0;
-	ta->pos[2] = 0.0f;
-	ta->angle = 0.0;
-	ta->rotate = a->rotate + (rnd() * 4.0 - 2.0);
-	ta->color[0] = 0.8;
-	ta->color[1] = 0.8;
-	ta->color[2] = 0.7;
-	ta->vel[0] = a->vel[0] + (rnd()*2.0-1.0);
-	ta->vel[1] = a->vel[1] + (rnd()*2.0-1.0);
-	//std::cout << "frag" << std::endl;
-}
-
 void physics()
 {
 
-//keep this for main screen
-//    if(gl.title_hat) {
-//        move_hat();
-//    }
-//	Flt d0,d1,dist;
-	//Update ship position
-//	g.ship.pos[0] += g.ship.vel[0];
-//	g.ship.pos[1] += g.ship.vel[1];
-//	//Check for collision with window edges
-//	if (g.ship.pos[0] < 0.0) {
-//		g.ship.pos[0] += (float)gl.xres;
-//	}
-//	else if (g.ship.pos[0] > (float)gl.xres) {
-//		g.ship.pos[0] -= (float)gl.xres;
-//	}
-//	else if (g.ship.pos[1] < 0.0) {
-//		g.ship.pos[1] += (float)gl.yres;
-//	}
-//	else if (g.ship.pos[1] > (float)gl.yres) {
-//		g.ship.pos[1] -= (float)gl.yres;
-//	}
-	//
-    
 	Flt d0,d1,dist;
 	//Update ship position
 	g.ship.pos[0] += g.ship.vel[0];
@@ -1058,30 +1013,43 @@ else if (g.ship.pos[1] > (float)gl.yres) {
 	while (i < g.nbullets) {
 		Bullet *b = &g.barr[i];
 		//How long has bullet been alive?
-		double ts = timeDiff(&b->time, &bt);
-		if (ts > 2.5) {
-			//time to delete the bullet.
-			memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-				sizeof(Bullet));
-			g.nbullets--;
-			//do not increment i.
-			continue;
-		}
+		// double ts = timeDiff(&b->time, &bt);
+		// if (ts > 2.5) {
+		// 	//time to delete the bullet.
+		// 	memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+		// 		sizeof(Bullet));
+		// 	g.nbullets--;
+		// 	//do not increment i.
+		// 	continue;
+		// }
 		//move the bullet
 		b->pos[0] += b->vel[0];
 		b->pos[1] += b->vel[1];
 		//Check for collision with window edges
+
+
+		// Bullets delete when wall hit
 		if (b->pos[0] < 0.0) {
-			b->pos[0] += (float)gl.xres;
+			// b->pos[0] += (float)gl.xres;
+			memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+				sizeof(Bullet));
+			g.nbullets--;
 		}
 		else if (b->pos[0] > (float)gl.xres) {
-			b->pos[0] -= (float)gl.xres;
+			// b->pos[0] -= (float)gl.xres;
+			memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+				sizeof(Bullet));
+			g.nbullets--;
 		}
 		else if (b->pos[1] < 0.0) {
-			b->pos[1] += (float)gl.yres;
+			memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+				sizeof(Bullet));
+			g.nbullets--;
 		}
 		else if (b->pos[1] > (float)gl.yres) {
-			b->pos[1] -= (float)gl.yres;
+			memcpy(&g.barr[i], &g.barr[g.nbullets-1],
+				sizeof(Bullet));
+			g.nbullets--;
 		}
 		++i;
 	}
@@ -1167,24 +1135,18 @@ else if (g.ship.pos[1] > (float)gl.yres) {
 		//convert angle to a vector
 		Flt xdir = cos(rad);
 		Flt ydir = sin(rad);
-		g.ship.vel[0] += xdir * 0.02f;
-		g.ship.vel[1] += ydir * 0.02f;
-		Flt speed = sqrt(g.ship.vel[0]*g.ship.vel[0]+
-				g.ship.vel[1]*g.ship.vel[1]);
-		if (speed > 10.0f) {
-			speed = 10.0f;
-			normalize2d(g.ship.vel);
-			g.ship.vel[0] *= speed;
-			g.ship.vel[1] *= speed;
-		}
+		// J ship movemnt, Swtiched ship.vel to ship.pos to remove drift effect
+
+		g.ship.pos[0] += xdir * 2.0f;
+		g.ship.pos[1] += ydir * 2.0f;
 	}
 	if (gl.keys[XK_space]) {
 		//a little time between each bullet
 		struct timespec bt;
 		clock_gettime(CLOCK_REALTIME, &bt);
-		double ts = timeDiff(&g.bulletTimer, &bt);
-		if (ts > 0.1) {
-			timeCopy(&g.bulletTimer, &bt);
+		// double ts = timeDiff(&g.bulletTimer, &bt);
+		// if (ts > 0.1) {
+			// timeCopy(&g.bulletTimer, &bt);
 			if (g.nbullets < MAX_BULLETS) {
 				//shoot a bullet...
 				//Bullet *b = new Bullet;
@@ -1203,12 +1165,12 @@ else if (g.ship.pos[1] > (float)gl.yres) {
 				b->pos[1] += ydir*20.0f;
 				b->vel[0] += xdir*6.0f + rnd()*0.1;
 				b->vel[1] += ydir*6.0f + rnd()*0.1;
-				b->color[0] = 1.0f;
-				b->color[1] = 1.0f;
+				b->color[0] = 0.0f;
+				b->color[1] = 0.0f;
 				b->color[2] = 1.0f;
 				g.nbullets++;
 			}
-		}
+		// }
 	}
 	if (g.mouseThrustOn) {
 		//should thrust be turned off
@@ -1341,58 +1303,14 @@ void render()
 	Rect r;
 	Rect stats;
 	glClear(GL_COLOR_BUFFER_BIT);
-	//----------------------------------
-    // so this used to be used for only the title screen
-    // but we can keep here if someone want's to use
-    // it for something else
-  //  float wid = 120;
-    //
-    //----------------------------------
-//    //
-//    if(!gl.game_started) {
-//    // setting up the title screen
-//    if (gl.title_screen) {
-//        show_title(&r, gl.xres, gl.yres);
-//        //draw_Iris(&r, gl.xres, gl.yres);
-//        gl.title_hat = 1;
-//        glColor3f(1.0, 1.0, 1.0);
-//        glEnable(GL_TEXTURE_2D);
-//    if(gl.title_hat) {
-//        glPushMatrix();
-//        glTranslatef(hat.pos[0], hat.pos[1], hat.pos[2]);
-//        glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
-//   // }
-//    glBegin(GL_QUADS);
-//    if(g.ship.vel[0] > 0.0) {
-//        glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
-//        glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
-//        glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
-//        glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
-//
-//    } else {
-//        glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
-//        glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
-//        glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
-//        glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
-//    }
-//    glEnd();
-//    glPopMatrix();
-//
-//        move_hat();
-//        return;
-//    }
-//}
-    //if(gl.character_screen) {
-      //  show_character_screen(&r, gl.xres, gl.yres);
-      //  draw_Iris(g.ship);
-//}
-//} 
+
 
 if (gl.game_started) {
 	stats.bot = 0;
 	stats.left = gl.xres-140;
 	stats.center = 0;
 	show_player_hearts(&stats, gl.yres, 5);
+	renderPLayerIcon(g.ship.pos[0], g.ship.pos[1], 40.0, g.ship.angle);
 ///-----------------------------------------------
     //float wid = 120.0f;
 ////---------------------------------------------
@@ -1410,7 +1328,7 @@ if (gl.game_started) {
     }
 	//-------------------------------------------------------------------------
 	//Draw the ship
-    draw_ship();
+    // draw_ship();
     /*glColor3fv(g.ship.color);
 	glPushMatrix();
 	glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
