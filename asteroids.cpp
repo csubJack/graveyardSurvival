@@ -25,11 +25,14 @@
 #include "log.h"
 #include "fonts.h"
 
+// adding in a header for types so we can all
+// use them instead of redefining them
+#include "types.h"
 
-//defined types
-typedef float Flt;
-typedef float Vec[3];
-typedef Flt	Matrix[4][4];
+//defined types, moved to header file
+//typedef float Flt;
+//typedef float Vec[3];
+//typedef Flt	Matrix[4][4];
 
 //macros
 #define rnd() (((Flt)rand())/(Flt)RAND_MAX)
@@ -357,7 +360,7 @@ public:
 	void set_title() {
 		//Set the window title bar.
 		XMapWindow(dpy, win);
-		XStoreName(dpy, win, "Asteroids template");
+		XStoreName(dpy, win, "Asteroids Modified");
 	}
 	void check_resize(XEvent *e) {
 		//The ConfigureNotify is sent by the
@@ -474,18 +477,31 @@ int main()
                 reset_game_animation();
             } else {
                 reset_title_animation();
+                //reset_character_screen_animation();
+                // next would be reset_character_screen
             }
             previous_game_state = gl.game_started;
         }
+       // if (gl.title_screen != previous_game_state) {
+         //   if (gl.title_screen) {
+          //      reset_title_animation();
+            //} else {
+          //      reset_game_animation();
+        //    }
+      //  }
         if (gl.game_started) {
             render();
+            //previous_game_state = gl.game_started;
         }
-		if (!gl.game_started) {
+        // used to be !gl.game_started
+		if (gl.title_screen) {
             title_render();
+            //previous_game_state = gl.title_screen;
         }
-        //if(gl.character_screen) {
-          //  character_screen_render();
-       // }
+        if (gl.character_screen) {
+            character_screen_render();
+        //    previous_game_state = gl.character_screen;
+        }
         //render();
 		x11.swapBuffers();
 	}
@@ -707,7 +723,8 @@ void check_mouse(XEvent *e)
 	// Fires if mouse moves, keeps player looking away from mouse
 	// TODO: ADD EXTRA MODE SO PLAYER IS FACING MOUSE
 	if (e->type == MotionNotify) {
-		g.ship.angle = update_player_angle(e->xmotion.x, g.ship.pos[0], e->xmotion.y, g.ship.pos[1]);
+		g.ship.angle = update_player_angle(e->xmotion.x,
+                g.ship.pos[0], e->xmotion.y, g.ship.pos[1]);
 	}
 
 	if (e->type == ButtonRelease) {
@@ -866,18 +883,16 @@ int check_keys(XEvent *e)
            }
            break;
         case XK_k:
-           //if (gl.game_started) {
-            //   gl.game_started = false;
-               //gl.title_screen = 0;
-            //   gl.character_screen = true;
-          // }
-          // if (gl.character_screen) {
-            //   //gl.game_started = true;
-            //   gl.character_screen = false;
-             //  gl.game_started = true;
-          // }
-           //gl.game_started = false;
-           //gl.title_screen = !gl.title_screen;
+           if (gl.title_screen) {
+               gl.title_screen = !gl.title_screen;
+               gl.character_screen = !gl.character_screen;
+           } else if (gl.character_screen) {
+               gl.character_screen = !gl.character_screen;
+               gl.game_started = !gl.game_started;
+           } else if (gl.game_started) {
+               gl.character_screen = !gl.character_screen;
+               gl.game_started = !gl.game_started;
+           }
            break;
 		case XK_s:
 			break;
@@ -1211,7 +1226,8 @@ else if (g.ship.pos[1] > (float)gl.yres) {
 extern void show_all(Rect *r, int xres, int yres,
  float delta_time, int credits_activation);
 extern void show_title(Rect *r, int xres, int yres);
-//extern void draw_Iris(Rect *r,int xres, int yres);
+extern void draw_Iris();
+// same thing here removing parameters Rect *r,int xres, int yres
 extern void show_character_screen(Rect *r, int xres, int yres);
 extern void levelText(Rect *r);
 
@@ -1274,6 +1290,8 @@ void character_screen_render()
 {
     Rect r;
     show_character_screen(&r, gl.xres, gl.yres);
+    //draw_Iris(); // removing the gl's
+   //&r, gl.xres, gl.yres)
 }
 
 void title_render() 

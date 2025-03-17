@@ -3,6 +3,12 @@
 //
 #include "fonts.h"
 #include <GL/glx.h>
+#include "types.h"
+#include "global_game.h"
+//taking this, might just put it in a header file later for macros
+#define VecZero(v) (v)[0]=0.0,(v)[1]=0.0,(v)[2]=0.0
+
+
 
 void show_all(Rect *r, int xres, int yres,
         float delta_time, int credits_activation)
@@ -65,69 +71,82 @@ void show_title(Rect *r, int xres, int yres)
     ggprint8b(r, 16, 0x00ff00ff, "left and right arrow to rotate");
     ggprint8b(r, 16, 0x00ff00ff, "space to fire");
 }
-
-
+extern void draw_ship();
+void draw_Iris();
 void show_character_screen(Rect *r, int xres, int yres) 
 {
 //    int char_arr[10];
+    glClear(GL_COLOR_BUFFER_BIT);
     r->center = 30;
     r->bot = yres / 2 + 120;
     r->left = xres/2;
-    glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(0.0, 0.0, 0.0);
-    glEnable(GL_TEXTURE_2D);
-
-
-
-
-}
-
-
-//void draw_Iris(class g.ship) 
-//{
-
-    ////glDisable(GL_TEXTURE_2D);
-    //glPushMatrix();
-    ////glLoadIdentity();
-    //glColor3f(1.0,0.0,1.0);
-    //glBegin(GL_TRIANGLES);
-    //glPolygonMode(GL_FRONT, GL_LINE);
-    //glLineWidth(4);
-    //glBegin(GL_QUADS_STRIP);
-    //glVertex2f(-0.25, 0.5);
-    //glVertex2f(-0.25, -0.25);
-    //glVertex2f(0.0, 0.0);
-    //glVertex2f(0.0, -.25);
-    //glVertex2f(0.25, 0.25);
-    //glVertex2f(0.25, -0.25);
-    //glEnd();
+    ggprint16(r, 24, 0xffffffff, "Character Select Screen");
     
-    //glVertex2f(-10.0f, -10.0f);
-	//glVertex2f(  0.0f, 20.0f);
-	//glVertex2f( 10.0f, -10.0f);
-    //glColor3f(1.0f, 1.0f, 1.0f);
-    //glVertex2f(-12.0f, -10.0f); // bottom left
-	//glVertex2f(  0.0f,  20.0f); // top left
-	//glVertex2f(  0.0f,  -10.0f); // bottom left center changing from -6 to -10
-	//glVertex2f(  0.0f,  -10.0f); //bottom right center same as above
-	//glVertex2f(  0.0f,  20.0f); // top right
-	//glVertex2f( 12.0f, -10.0f); // bottom right
-    //glEnd();
-	//glColor3f(1.0f, 0.0f, 0.0f);
-	//glBegin(GL_POINTS);
-	//glVertex2f(0.0f, 0.0f);
-	//glEnd();
-    //glPopMatrix();  
-    //glEnable(GL_TEXTURE_2D);
-    //glColor3fv();
-  //  GLunit vbo;
-  //  glGenBuffers(1, &vbo); // generates one buffer
-  //  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-   // float vertices[] = {
-     //   0.0f, 0.5f,
-     //   0.5f, -0.5f,
-    //    -0.5f, -0.5f
-   // };
-   // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-//}
+    r->bot = gl.yres - 20;
+    r->left = 10;
+    r->center = 0;
+    ggprint8b(r, 16, 0x000000ff, "k to return to main screen");
+    //glClear(GL_COLOR_BUFFER_BIT);
+    //glColor3f(0.0, 0.0, 0.0);
+    glEnable(GL_TEXTURE_2D);
+    // need to draw ships
+    void (*draw_ships[])() = {draw_ship};
+    // all the functions draw_ship, draw_Iris
+    //draw_ship();
+    for(int i = 0; i < 1; i++) {
+        draw_ships[i]();
+    }
+    
+}
+class Iris {
+public:
+    Vec pos;
+    Vec dir;
+    Vec vel;
+    Vec acc;
+    float angle;
+    float color[3];
+public:
+    Iris() {
+        pos[0] = (Flt)(gl.xres/2);
+        pos[1] = (Flt)(gl.yres/2);
+        pos[2] = 0.0f;
+        VecZero(dir);
+        VecZero(vel);
+        VecZero(acc);
+        angle = 0.0;
+        color[0] = color[2] = 1.0;
+        color[1] = 0.0;
+
+    }
+}iris;
+
+void draw_Iris() // used to be class g.ship 
+{
+   // glDisable(GL_TEXTURE_2D);
+    glColor3fv(iris.color);
+    glPushMatrix();
+    glTranslatef(iris.pos[0], iris.pos[1], iris.pos[2]);
+    glRotatef(iris.angle, 0.0f, 0.0f, 1.0f);
+    //glLoadIdentity();
+    //glColor3f(1.0,0.0,1.0);
+    glBegin(GL_TRIANGLES);
+    glVertex2f(-10.0f, -10.0f);
+	glVertex2f(  0.0f, 20.0f);
+	glVertex2f( 10.0f, -10.0f);
+
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glVertex2f(-12.0f, -10.0f); // bottom left
+	glVertex2f(  0.0f,  20.0f); // top left
+	glVertex2f(  0.0f,  -10.0f); // bottom left center changing from -6 to -10
+	glVertex2f(  0.0f,  -10.0f); //bottom right center same as above
+	glVertex2f(  0.0f,  20.0f); // top right
+	glVertex2f( 12.0f, -10.0f); // bottom right
+    glEnd();
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glBegin(GL_POINTS);
+	glVertex2f(0.0f, 0.0f);
+	glEnd();
+    glPopMatrix();  
+}
 
