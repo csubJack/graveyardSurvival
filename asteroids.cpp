@@ -1,14 +1,8 @@
-///
-//program: asteroids.cpp
-//author:  Gordon Griesel
-//date:    2014 - 2025
-//mod spring 2015: added constructors
-//This program is a game starting point for a 3350 project.
-//
-//
 
 // Group Header Files: 
 #include "jsweeny.h"
+#include "types.h"
+#include "global_game.h"
 
 #include <iostream>
 #include <cstdlib>
@@ -17,9 +11,7 @@
 #include <ctime>
 #include <cmath>
 #include <X11/Xlib.h>
-//#include <X11/Xutil.h>
-//#include <GL/gl.h>
-//#include <GL/glu.h>
+
 #include <X11/keysym.h>
 #include <GL/glx.h>
 #include "log.h"
@@ -47,11 +39,10 @@
 //constants
 const float timeslice = 1.0f;
 const float gravity = -0.2f;
-#define PI 3.141592653589793
+// #define PI 3.141592653589793
 #define ALPHA 1
 const int MAX_BULLETS = 22; // Doubled due to 2 pistols
 int lastShot = 0; // right gun is zero
-const Flt MINIMUM_ASTEROID_SIZE = 60.0;
 
 //-----------------------------------------------------------------------------
 //Setup timers
@@ -127,150 +118,12 @@ Image img[2] = {
 
 
 //------------------------------------------------------------------------
-class Global {
-public:
-	int xres, yres;
-	char keys[65536];
-	int mouse_cursor_on;
-    int credits;
-    int title_screen;
-    int title_hat;
-    int character_screen;
-    bool game_started;
-    GLuint witch_texture;
-    GLuint hat_texture;
-    //bool show_witch;
 
-	// Mouse Coordinates -Jack
-	float mouseXCoordinate;
-	float mouseYCoordinate;
-
-	Global() {
-		xres = 640;
-		yres = 480;
-		memset(keys, 0, 65536);
-		// mouse value 1 = true = mouse is a regular mouse.
-		mouse_cursor_on = 1;
-        credits = 0;
-        title_screen = 1;
-        character_screen = 0;
-        game_started = false;
-        //show_witch = false;
-	}
-} gl;
-
-class Ship {
-public:
-	Vec pos;
-	Vec dir;
-	Vec vel;
-	Vec acc;
-	float angle;
-	float color[3];
-public:
-	Ship() {
-		pos[0] = (Flt)(gl.xres/2);
-		pos[1] = (Flt)(gl.yres/2);
-		pos[2] = 0.0f;
-		VecZero(dir);
-		VecZero(vel);
-		VecZero(acc);
-		angle = 0.0;
-		color[0] = color[1] = color[2] = 1.0;
-	}
-};
-
-class Bullet {
-public:
-	Vec pos;
-	Vec vel;
-	float color[3];
-	struct timespec time;
-public:
-	Bullet() { }
-};
-
-class Asteroid {
-public:
-	Vec pos;
-	Vec vel;
-	int nverts;
-	Flt radius;
-	Vec vert[8];
-	float angle;
-	float rotate;
-	float color[3];
-	struct Asteroid *prev;
-	struct Asteroid *next;
-public:
-	Asteroid() {
-		prev = NULL;
-		next = NULL;
-	}
-};
-
-class Hat {
-public:
-    Vec pos;
-    Vec vel;
-} hat;
+Global gl;
+Game g;
+Hat hat; 
 
 
-class Game {
-public:
-	Ship ship;
-  //  Witch witch;
-	Asteroid *ahead;
-	Bullet *barr;
-	int nasteroids;
-	int nbullets;
-	// struct timespec bulletTimer;
-	struct timespec mouseThrustTimer;
-	bool mouseThrustOn;
-public:
-	Game() {
-		ahead = NULL;
-		barr = new Bullet[MAX_BULLETS];
-		nasteroids = 0;
-		nbullets = 0;
-		mouseThrustOn = false;
-		//build 10 asteroids...
-		for (int j=0; j<10; j++) {
-			Asteroid *a = new Asteroid;
-			a->nverts = 8;
-			a->radius = rnd()*80.0 + 40.0;
-			Flt r2 = a->radius / 2.0;
-			Flt angle = 0.0f;
-			Flt inc = (PI * 2.0) / (Flt)a->nverts;
-			for (int i=0; i<a->nverts; i++) {
-				a->vert[i][0] = sin(angle) * (r2 + rnd() * a->radius);
-				a->vert[i][1] = cos(angle) * (r2 + rnd() * a->radius);
-				angle += inc;
-			}
-			a->pos[0] = (Flt)(rand() % gl.xres);
-			a->pos[1] = (Flt)(rand() % gl.yres);
-			a->pos[2] = 0.0f;
-			a->angle = 0.0;
-			a->rotate = rnd() * 4.0 - 2.0;
-			a->color[0] = 0.8;
-			a->color[1] = 0.8;
-			a->color[2] = 0.7;
-			a->vel[0] = (Flt)(rnd()*2.0-1.0);
-			a->vel[1] = (Flt)(rnd()*2.0-1.0);
-			//std::cout << "asteroid" << std::endl;
-			//add to front of linked list
-			a->next = ahead;
-			if (ahead != NULL)
-				ahead->prev = a;
-			ahead = a;
-			++nasteroids;
-		}
-		// clock_gettime(CLOCK_REALTIME, &bulletTimer);
-	}
-	~Game() {
-		delete [] barr;
-	}
-} g;
 
 GLuint playerTexture;
 // Jack
@@ -280,9 +133,6 @@ void loadPlayerIcon() {
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glGenTextures(1, &playerTexture);
 
-	if (!playerTexture) {
-		std::cerr << "Player Texture Empty 1" << std::endl;
-	}
 	glEnable(GL_TEXTURE_2D);
 	// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -388,7 +238,7 @@ public:
 	void set_title() {
 		//Set the window title bar.
 		XMapWindow(dpy, win);
-		XStoreName(dpy, win, "Asteroids Modified");
+		XStoreName(dpy, win, "GraveyardSurvival");
 	}
 	void check_resize(XEvent *e) {
 		//The ConfigureNotify is sent by the
@@ -453,7 +303,6 @@ public:
 		//(thus do only use ONCE XDefineCursor and then XUndefineCursor):
 	}
 } x11(gl.xres, gl.yres);
-// ---> for fullscreen x11(0, 0);
 
 //function prototypes
 void init_opengl(void);
@@ -468,7 +317,6 @@ void init();
 // animation rest
 void reset_game_animation();
 void reset_title_animation();
-void init_asteroids();
 //==========================================================================
 // M A I N
 //==========================================================================
@@ -589,57 +437,15 @@ void reset_game_animation() {
     g.ship.vel[1] = 0.0f;
     g.nbullets = 0; // clears bullets
     
-    // removing the exitising asteroids
-    while (g.ahead) {
-        Asteroid *temp = g.ahead;
-        g.ahead = g.ahead->next;
-        free(temp);
-    }
-    init_asteroids(); // reinitialize asteroids
 }
 
 void reset_title_animation() {
     // resetting the hat
     init();
 }
-void init_asteroids()
-{
-    g.ahead = 0;
-    g.nasteroids = 0;
-    //build 10 asteroids...
-    for (int j=0; j<10; j++) {
-        Asteroid *a = new Asteroid;
-        a->nverts = 8;
-		a->radius = rnd()*80.0 + 40.0;
-		Flt r2 = a->radius / 2.0;
-		Flt angle = 0.0f;
-		Flt inc = (PI * 2.0) / (Flt)a->nverts;
-		for (int i=0; i<a->nverts; i++) {
-            a->vert[i][0] = sin(angle) * (r2 + rnd() * a->radius);
-			a->vert[i][1] = cos(angle) * (r2 + rnd() * a->radius);
-			angle += inc;
-        }
-        a->pos[0] = (Flt)(rand() % gl.xres);
-		a->pos[1] = (Flt)(rand() % gl.yres);
-		a->pos[2] = 0.0f;
-		a->angle = 0.0;
-		a->rotate = rnd() * 4.0 - 2.0;
-		a->color[0] = 0.8;
-		a->color[1] = 0.8;
-		a->color[2] = 0.7;
-		a->vel[0] = (Flt)(rnd()*2.0-1.0);
-		a->vel[1] = (Flt)(rnd()*2.0-1.0);
-		//std::cout << "asteroid" << std::endl;
-		//add to front of linked list
-		a->next = g.ahead;
-        if (g.ahead != NULL)
-			g.ahead->prev = a;
-		g.ahead = a;
-		++g.nasteroids;
-		}
-}
 
-//
+
+
 void init_opengl(void)
 {
 	//OpenGL initialization
@@ -705,54 +511,6 @@ void normalize2d(Vec v)
 	v[1] *= len;
 }
 
-
-void handle_shot() {
-	// JAck
-	Bullet *b = &g.barr[g.nbullets];
-					//convert ship angle to radians
-					Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-					//convert angle to a vector
-					Flt xdir = cos(rad);
-					Flt ydir = sin(rad);
-
-					Flt sideX = -ydir;
-					Flt sideY = xdir;
-
-
-					Flt rightOffset = 18.0f;
-					Flt leftOffset = -18.0f;
-
-					if (lastShot == 0) {
-						// Right pistol shoots
-						b->pos[0] = g.ship.pos[0] + (sideX * rightOffset);
-						b->pos[1] = g.ship.pos[1] + (sideY * rightOffset);
-						b->vel[0] = g.ship.vel[0];
-						b->vel[1] = g.ship.vel[1];
-
-						
-						// b->pos[0] += xdir*20.0f;
-						// b->pos[1] += ydir*20.0f;
-						b->vel[0] += xdir*6.0f + rnd()*0.1;
-						b->vel[1] += ydir*6.0f + rnd()*0.1;
-						lastShot = 1;
-						
-					} else {
-						// Left pistol shoots
-
-						b->pos[0] = g.ship.pos[0] + (sideX * leftOffset);
-						b->pos[1] = g.ship.pos[1] + (sideY * leftOffset);
-						b->vel[0] = g.ship.vel[0];
-						b->vel[1] = g.ship.vel[1];
-					
-						b->vel[0] += xdir*6.0f + rnd()*0.1;
-						b->vel[1] += ydir*6.0f + rnd()*0.1;
-						lastShot = 0;
-					}
-
-					++g.nbullets;
-}
-
-
 void check_mouse(XEvent *e)
 {
 	//Did the mouse move?
@@ -776,13 +534,9 @@ void check_mouse(XEvent *e)
 	if (e->type == ButtonPress) {
 		if (e->xbutton.button==1) {
 			//Left button is down
-			//a little time between each bullet
 				if (g.nbullets < MAX_BULLETS) {
-					handle_shot();	
+					handle_shot(lastShot);	
 				}
-		}
-		if (e->xbutton.button==3) {
-			//Right button is down
 		}
 	}
 	//keys[XK_Up] = 0;
@@ -936,55 +690,15 @@ void move_hat()
 }
 
 
-void deleteAsteroid(Game *g, Asteroid *node)
-{
-	//Remove a node from doubly-linked list
-	//Must look at 4 special cases below.
-	if (node->prev == NULL) {
-		if (node->next == NULL) {
-			//only 1 item in list.
-			g->ahead = NULL;
-		} else {
-			//at beginning of list.
-			node->next->prev = NULL;
-			g->ahead = node->next;
-		}
-	} else {
-		if (node->next == NULL) {
-			//at end of list.
-			node->prev->next = NULL;
-		} else {
-			//in middle of list.
-			node->prev->next = node->next;
-			node->next->prev = node->prev;
-		}
-	}
-	delete node;
-	node = NULL;
-}
+
 
 void physics()
 {
 
-	Flt d0,d1,dist;
 	//Update ship position
 	g.ship.pos[0] += g.ship.vel[0];
 	g.ship.pos[1] += g.ship.vel[1];
 
-    
-	//Check for collision with window edges
-//	if (g.ship.pos[0] < 0.0) {
-//		g.ship.pos[0] += (float)gl.xres;
-//	}
-//	else if (g.ship.pos[0] > (float)gl.xres) {
-//		g.ship.pos[0] -= (float)gl.xres;
-//	}
-//	else if (g.ship.pos[1] < 0.0) {
-//		g.ship.pos[1] += (float)gl.yres;
-//	}
-//	else if (g.ship.pos[1] > (float)gl.yres) {
-//		g.ship.pos[1] -= (float)gl.yres;
-//	}
     
     // Add this new logic:
 if (g.ship.pos[0] < 0.0) {
@@ -1007,22 +721,9 @@ else if (g.ship.pos[1] > (float)gl.yres) {
 
 	//
 	//Update bullet positions
-	struct timespec bt;
-	clock_gettime(CLOCK_REALTIME, &bt);
 	int i = 0;
 	while (i < g.nbullets) {
 		Bullet *b = &g.barr[i];
-		//How long has bullet been alive?
-		// double ts = timeDiff(&b->time, &bt);
-		// if (ts > 2.5) {
-		// 	//time to delete the bullet.
-		// 	memcpy(&g.barr[i], &g.barr[g.nbullets-1],
-		// 		sizeof(Bullet));
-		// 	g.nbullets--;
-		// 	//do not increment i.
-		// 	continue;
-		// }
-		//move the bullet
 		b->pos[0] += b->vel[0];
 		b->pos[1] += b->vel[1];
 		//Check for collision with window edges
@@ -1053,68 +754,7 @@ else if (g.ship.pos[1] > (float)gl.yres) {
 		}
 		++i;
 	}
-	//
-	//Update asteroid positions
-	Asteroid *a = g.ahead;
-	while (a) {
-		a->pos[0] += a->vel[0];
-		a->pos[1] += a->vel[1];
-		//Check for collision with window edges
-		if (a->pos[0] < -100.0) {
-			a->pos[0] += (float)gl.xres+200;
-		}
-		else if (a->pos[0] > (float)gl.xres+100) {
-			a->pos[0] -= (float)gl.xres+200;
-		}
-		else if (a->pos[1] < -100.0) {
-			a->pos[1] += (float)gl.yres+200;
-		}
-		else if (a->pos[1] > (float)gl.yres+100) {
-			a->pos[1] -= (float)gl.yres+200;
-		}
-		a->angle += a->rotate;
-		a = a->next;
-	}
-	//
-	//Asteroid collision with bullets?
-	//If collision detected:
-	//     1. delete the bullet
-	//     2. break the asteroid into pieces
-	//        if asteroid small, delete it
-	a = g.ahead;
-	while (a) {
-		//is there a bullet within its radius?
-		int i=0;
-		while (i < g.nbullets) {
-			Bullet *b = &g.barr[i];
-			d0 = b->pos[0] - a->pos[0];
-			d1 = b->pos[1] - a->pos[1];
-			dist = (d0*d0 + d1*d1);
-			if (dist < (a->radius*a->radius)) {
-				//std::cout << "asteroid hit." << std::endl;
-				//this asteroid is hit.
-					a->color[0] = 1.0;
-					a->color[1] = 0.1;
-					a->color[2] = 0.1;
-					
-                    //delete the asteroid and bullet
-					Asteroid *savea = a->next;
-					deleteAsteroid(&g, a);
-					a = savea;
-					g.nasteroids--;
-				
-				//delete the bullet...
-				memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
-				g.nbullets--;
-				if (a == NULL)
-					break;
-			}
-			i++;
-		}
-		if (a == NULL)
-			break;
-		a = a->next;
-	}
+
 	//---------------------------------------------------
 	//check keys pressed now
     //current g.ship.angle, changing that gl.witch.angle and so on
@@ -1136,51 +776,10 @@ else if (g.ship.pos[1] > (float)gl.yres) {
 		Flt xdir = cos(rad);
 		Flt ydir = sin(rad);
 		// J ship movemnt, Swtiched ship.vel to ship.pos to remove drift effect
-
 		g.ship.pos[0] += xdir * 2.0f;
 		g.ship.pos[1] += ydir * 2.0f;
 	}
-	if (gl.keys[XK_space]) {
-		//a little time between each bullet
-		struct timespec bt;
-		clock_gettime(CLOCK_REALTIME, &bt);
-		// double ts = timeDiff(&g.bulletTimer, &bt);
-		// if (ts > 0.1) {
-			// timeCopy(&g.bulletTimer, &bt);
-			if (g.nbullets < MAX_BULLETS) {
-				//shoot a bullet...
-				//Bullet *b = new Bullet;
-				Bullet *b = &g.barr[g.nbullets];
-				timeCopy(&b->time, &bt);
-				b->pos[0] = g.ship.pos[0];
-				b->pos[1] = g.ship.pos[1];
-				b->vel[0] = g.ship.vel[0];
-				b->vel[1] = g.ship.vel[1];
-				//convert ship angle to radians
-				Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-				//convert angle to a vector
-				Flt xdir = cos(rad);
-				Flt ydir = sin(rad);
-				b->pos[0] += xdir*20.0f;
-				b->pos[1] += ydir*20.0f;
-				b->vel[0] += xdir*6.0f + rnd()*0.1;
-				b->vel[1] += ydir*6.0f + rnd()*0.1;
-				b->color[0] = 0.0f;
-				b->color[1] = 0.0f;
-				b->color[2] = 1.0f;
-				g.nbullets++;
-			}
-		// }
-	}
-	if (g.mouseThrustOn) {
-		//should thrust be turned off
-		struct timespec mtt;
-		clock_gettime(CLOCK_REALTIME, &mtt);
-		double tdif = timeDiff(&mtt, &g.mouseThrustTimer);
-		//std::cout << "tdif: " << tdif << std::endl;
-		if (tdif < -0.3)
-			g.mouseThrustOn = false;
-	}
+	
 }
 
 // added int xres and int yres so as to not cluter anything up here
@@ -1192,6 +791,7 @@ extern void draw_Iris();
 // same thing here removing parameters Rect *r,int xres, int yres
 extern void show_character_screen(Rect *r, int xres, int yres);
 extern void levelText(Rect *r);
+
 
 void draw_ship() 
 {
@@ -1320,7 +920,6 @@ if (gl.game_started) {
 
 	levelText(&r);
 	ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
-	ggprint8b(&r, 16, 0x00ffff00, "n asteroids: %i", g.nasteroids);
     ggprint8b(&r, 16, 0x00ff00ff, "c for credits: ");
 
     if (gl.credits) {
@@ -1374,35 +973,7 @@ if (gl.game_started) {
 		glEnd();
 	} */
 	//----------------------------------------------------------------------
-	//Draw the asteroids
-	{
-        //if (gl.game_started) {
-		Asteroid *a = g.ahead;
-		while (a) {
-			//Log("draw asteroid...\n");
-			glColor3fv(a->color);
-			glPushMatrix();
-			glTranslatef(a->pos[0], a->pos[1], a->pos[2]);
-			glRotatef(a->angle, 0.0f, 0.0f, 1.0f);
-			glBegin(GL_LINE_LOOP);
-			//Log("%i verts\n",a->nverts);
-			for (int j=0; j<a->nverts; j++) {
-				glVertex2f(a->vert[j][0], a->vert[j][1]);
-			}
-			glEnd();
-			//glBegin(GL_LINES);
-			//	glVertex2f(0,   0);
-			//	glVertex2f(a->radius, 0);
-			//glEnd();
-			glPopMatrix();
-			glColor3f(1.0f, 0.0f, 0.0f);
-			glBegin(GL_POINTS);
-			glVertex2f(a->pos[0], a->pos[1]);
-			glEnd();
-			a = a->next;
-		}
-    //}
-	}
+	
 	//-------------------------------------------------------------------------
 	//Draw the bullets
 	for (int i=0; i<g.nbullets; i++) {
