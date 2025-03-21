@@ -72,6 +72,10 @@ void show_title(Rect *r, int xres, int yres)
     ggprint8b(r, 16, 0x00ff00ff, "space to fire");
 }
 extern void draw_ship();
+/*
+extern void renderPLayerIcon(float playerX, float playerY,
+        float playerSize, float playerAngle);
+*/
 void draw_Iris();
 void show_character_screen(Rect *r, int xres, int yres) 
 {
@@ -90,14 +94,26 @@ void show_character_screen(Rect *r, int xres, int yres)
     //glColor3f(0.0, 0.0, 0.0);
     glEnable(GL_TEXTURE_2D);
     // need to draw ships
+    // switching back to icons ?
     void (*draw_ships[])() = {draw_ship};
     // all the functions draw_ship, draw_Iris
     //draw_ship();
     for(int i = 0; i < 1; i++) {
         draw_ships[i]();
+
     }
     
 }
+
+void show_score(Rect *r, int yres, int player_score)
+{
+    r->bot = yres - 70;
+    r->left = 10;
+    r->center = 0;
+    ggprint8b(r, 16, 0x00ff00ff, "Score: %i", player_score);
+}
+
+/*
 class Iris {
 public:
     Vec pos;
@@ -149,4 +165,5 @@ void draw_Iris() // used to be class g.ship
 	glEnd();
     glPopMatrix();  
 }
+*/
 

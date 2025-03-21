@@ -27,6 +27,7 @@ class Global {
         int title_screen;
         int title_hat;
         int character_screen;
+        int player_score;
         bool game_started;
         GLuint witch_texture;
         GLuint hat_texture;

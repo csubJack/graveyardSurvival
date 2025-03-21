@@ -367,6 +367,7 @@ int main()
       //  }
         if (gl.game_started) {
             render();
+            gl.player_score += 1;
         }
         // used to be !gl.game_started
 		if (gl.title_screen) {
@@ -787,10 +788,11 @@ else if (g.ship.pos[1] > (float)gl.yres) {
 extern void show_all(Rect *r, int xres, int yres,
  float delta_time, int credits_activation);
 extern void show_title(Rect *r, int xres, int yres);
-extern void draw_Iris();
+//extern void draw_Iris();
 // same thing here removing parameters Rect *r,int xres, int yres
 extern void show_character_screen(Rect *r, int xres, int yres);
 extern void levelText(Rect *r);
+extern void show_score(Rect *r, int yres, int player_score);
 
 
 void draw_ship() 
@@ -910,6 +912,7 @@ if (gl.game_started) {
 	stats.left = gl.xres-140;
 	stats.center = 0;
 	show_player_hearts(&stats, gl.yres, 5);
+    show_score(&r, gl.yres, gl.player_score);
 	renderPLayerIcon(g.ship.pos[0], g.ship.pos[1], 40.0, g.ship.angle);
 ///-----------------------------------------------
     //float wid = 120.0f;
