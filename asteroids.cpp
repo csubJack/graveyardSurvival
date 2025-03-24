@@ -111,9 +111,10 @@ public:
     }
 };
 
-Image img[2] = {
+Image img[3] = {
 "./images/hat.png",
-"./images/standing-still.png"
+"./images/standing-still.png",
+"./images/houndDog2.png"
 };
 
 
@@ -122,7 +123,7 @@ Image img[2] = {
 Global gl;
 Game g;
 Hat hat; 
-
+Hound hound;
 
 
 GLuint playerTexture;
@@ -313,7 +314,10 @@ void render();
 void title_render();
 void character_screen_render();
 // removed from now it 
-void init();
+//void init();
+extern void show_hat(); 
+extern void show_hound();
+//void show_hound();
 // animation rest
 void reset_game_animation();
 void reset_title_animation();
@@ -324,7 +328,9 @@ int main()
 {
 	logOpen();
 	init_opengl();
-    init();
+    show_hat();
+    show_hound();
+    //init(); show hat should replace this
 	srand(time(NULL));
 	clock_gettime(CLOCK_REALTIME, &timePause);
 	clock_gettime(CLOCK_REALTIME, &timeStart);
@@ -437,12 +443,15 @@ void reset_game_animation() {
     g.ship.vel[0] = 0.0f;
     g.ship.vel[1] = 0.0f;
     g.nbullets = 0; // clears bullets
+    show_hat();
     
 }
 
+
 void reset_title_animation() {
     // resetting the hat
-    init();
+    //init();
+    show_hat();
 }
 
 
@@ -473,6 +482,7 @@ void init_opengl(void)
 
 	
     glGenTextures(1, &gl.hat_texture);
+    glGenTextures(1, &gl.hound_texture);
 	loadPlayerIcon();
 
     //----------------------------------------------
@@ -489,16 +499,44 @@ void init_opengl(void)
     glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
         GL_RGB, GL_UNSIGNED_BYTE, img[0].data);
 
+    // for the hound dog
+    w = img[2].width;
+    h = img[2].height;
+    glBindTexture(GL_TEXTURE_2D, gl.hound_texture);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+        GL_RGB, GL_UNSIGNED_BYTE, img[2].data);
+    //trying to implement the transparency
+//    glBindTexture(GL_TEXTURE_2D, gl.hound_trans_texture);
+	//
+//	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+//	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	//
+	//must build a new set of data...
+//	w = img[2].width;
+//	h = img[2].height;
+//	unsigned char *ftData = buildAlphaData(&img[2]);	
+//	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+//											GL_RGBA, GL_UNSIGNED_BYTE, ftData);
+//	free(ftData);
 }
 // only for witch lone movement
-void init() {
+//void init() 
+//{
     //makes it move around, for now we just want to see it
     //modifying the numbers for vel
     //6 0 0 0, to 6 15 0
-    MakeVector(-150.0,180.0,0.0, hat.pos);
-    MakeVector(6.0,15.0,0.0, hat.vel);
-}
+//    MakeVector(-150.0,180.0,0.0, hat.pos);
+//    MakeVector(6.0,15.0,0.0, hat.vel);
+//}
 
+//void show_hound()
+//{
+//    MakeVector(-150.0, 180.0, 0.0, hound.pos);
+//    MakeVector(6.0, 15.0, 0.0, hound.vel);
+//}
+//
 void normalize2d(Vec v)
 {
 	Flt len = v[0]*v[0] + v[1]*v[1];
@@ -690,7 +728,31 @@ void move_hat()
         hat.vel[1] -= 0.75;
 }
 
+void move_hound()
+{
+    //move hound
+    int addgrav = 1;
+    //Update position
+    hound.pos[0] += hound.vel[0];
+    hound.pos[1] += hound.vel[1];
+    //Check for collision with window edges
+    if ((hound.pos[0] < -140.0 && hound.vel[0] < 0.0) ||
+        (hound.pos[0] >= (float)gl.xres+140.0 &&
+        hound.vel[0] > 0.0))
+    {
+        hound.vel[0] = -hound.vel[0];
+        addgrav = 0;
+    }
+    if ((hound.pos[1] < 150.0 && hound.vel[1] < 0.0) ||
+        (hound.pos[1] >= (float)gl.yres && hound.vel[1] > 0.0)) {
+        hound.vel[1] = -hound.vel[1];
+        addgrav = 0;
+    }
+    //Gravity?
+    if (addgrav)
+        hound.vel[1] -= 0.75;
 
+}
 
 
 void physics()
@@ -915,7 +977,7 @@ if (gl.game_started) {
     show_score(&r, gl.yres, gl.player_score);
 	renderPLayerIcon(g.ship.pos[0], g.ship.pos[1], 40.0, g.ship.angle);
 ///-----------------------------------------------
-    //float wid = 120.0f;
+    float wid = 120.0f;
 ////---------------------------------------------
 	r.bot = gl.yres - 20;
 	r.left = 10;
@@ -928,6 +990,41 @@ if (gl.game_started) {
     if (gl.credits) {
         show_all(&r, gl.xres, gl.yres, timeSpan, gl.credits);
     }
+    glColor3f(1.0, 1.0, 1.0);
+    //glEnable(GL_TEXTURE_2D);
+    //gl.main_hat = 1;
+    if(gl.player_score > 100)
+        gl.main_hat =1;
+    if(gl.main_hat) {
+        
+        //show_hound();
+        glPushMatrix();
+        // replacing with hat for the moment
+        glTranslatef(hat.pos[0], hat.pos[1], hat.pos[2]);
+        glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
+   // }
+    glBegin(GL_QUADS);
+    if(g.ship.vel[0] > 0.0) {
+        glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+        glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+
+    } else {
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+        glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+        glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+    }
+    glEnd();
+    glPopMatrix();
+    move_hat();
+}
+    //show_hound();
+    //glPushMatrix();
+    //glTranslatef(hound.pos[0], hound.pos[1], hound.pos[2]);
+    //glBindTexture(GL_TEXTURE_2D, gl.hound_texture);
+
 	//-------------------------------------------------------------------------
 	//Draw the ship
     // draw_ship();
@@ -979,6 +1076,8 @@ if (gl.game_started) {
 	
 	//-------------------------------------------------------------------------
 	//Draw the bullets
+    glDisable(GL_TEXTURE_2D);
+    glColor3f(1.0, 1.0, 1.0);
 	for (int i=0; i<g.nbullets; i++) {
 		Bullet *b = &g.barr[i];
 		//Log("draw bullet...\n");
@@ -996,6 +1095,7 @@ if (gl.game_started) {
 		glVertex2f(b->pos[0]+1.0f, b->pos[1]+1.0f);
 		glEnd();
 	}
+    glEnable(GL_TEXTURE_2D);
 //--------------------------------------------------------------------------
 }
 }

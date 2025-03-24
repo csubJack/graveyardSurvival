@@ -26,12 +26,14 @@ class Global {
         int credits;
         int title_screen;
         int title_hat;
+        int main_hat;
         int character_screen;
         int player_score;
         bool game_started;
         GLuint witch_texture;
         GLuint hat_texture;
-
+        GLuint hound_texture;
+        GLuint hound_trans_texture;
         float mouseXCoordinate;
         float mouseYCoordinate;
     
@@ -86,6 +88,11 @@ class Global {
         Vec pos;
         Vec vel;
     };
+    class Hound {
+    public:
+        Vec pos;
+        Vec vel;
+    };
     
     
     class Game {
@@ -112,6 +119,7 @@ class Global {
     extern Global gl;
     extern Game g;
     extern Hat hat;
+    extern Hound hound;
 
 #endif
 

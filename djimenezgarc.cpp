@@ -7,6 +7,7 @@
 #include "global_game.h"
 //taking this, might just put it in a header file later for macros
 #define VecZero(v) (v)[0]=0.0,(v)[1]=0.0,(v)[2]=0.0
+#define MakeVector(x, y, z, v) (v)[0]=(x),(v)[1]=(y),(v)[2]=(z)
 
 
 
@@ -113,57 +114,15 @@ void show_score(Rect *r, int yres, int player_score)
     ggprint8b(r, 16, 0x00ff00ff, "Score: %i", player_score);
 }
 
-/*
-class Iris {
-public:
-    Vec pos;
-    Vec dir;
-    Vec vel;
-    Vec acc;
-    float angle;
-    float color[3];
-public:
-    Iris() {
-        pos[0] = (Flt)(gl.xres/2);
-        pos[1] = (Flt)(gl.yres/2);
-        pos[2] = 0.0f;
-        VecZero(dir);
-        VecZero(vel);
-        VecZero(acc);
-        angle = 0.0;
-        color[0] = color[2] = 1.0;
-        color[1] = 0.0;
-
-    }
-}iris;
-
-void draw_Iris() // used to be class g.ship 
+void show_hat()
 {
-   // glDisable(GL_TEXTURE_2D);
-    glColor3fv(iris.color);
-    glPushMatrix();
-    glTranslatef(iris.pos[0], iris.pos[1], iris.pos[2]);
-    glRotatef(iris.angle, 0.0f, 0.0f, 1.0f);
-    //glLoadIdentity();
-    //glColor3f(1.0,0.0,1.0);
-    glBegin(GL_TRIANGLES);
-    glVertex2f(-10.0f, -10.0f);
-	glVertex2f(  0.0f, 20.0f);
-	glVertex2f( 10.0f, -10.0f);
-
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glVertex2f(-12.0f, -10.0f); // bottom left
-	glVertex2f(  0.0f,  20.0f); // top left
-	glVertex2f(  0.0f,  -10.0f); // bottom left center changing from -6 to -10
-	glVertex2f(  0.0f,  -10.0f); //bottom right center same as above
-	glVertex2f(  0.0f,  20.0f); // top right
-	glVertex2f( 12.0f, -10.0f); // bottom right
-    glEnd();
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glBegin(GL_POINTS);
-	glVertex2f(0.0f, 0.0f);
-	glEnd();
-    glPopMatrix();  
+    MakeVector(-150.0, 180.0, 0.0, hat.pos);
+    MakeVector(6.0, 15.0, 0.0, hat.vel);
 }
-*/
+
+void show_hound() 
+{
+    MakeVector(-150.0, 180.0, 0.0, hound.pos);
+    MakeVector(6.0, 15.0, 0.0, hound.vel);
+}
 
