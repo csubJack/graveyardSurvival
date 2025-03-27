@@ -150,6 +150,7 @@ void loadPlayerIcon() {
 	
 }
 // Jack
+
 void renderPLayerIcon(float playerX, float playerY, float playerSize, float playerAngle) {
 	glPushMatrix();
 
@@ -172,7 +173,6 @@ void renderPLayerIcon(float playerX, float playerY, float playerSize, float play
 
 	glPopMatrix();
 }
-
 
 //X Windows variables
 class X11_wrapper {
@@ -312,11 +312,13 @@ int check_keys(XEvent *e);
 void physics();
 void render();
 void title_render();
-void character_screen_render();
+extern void show_score();
+void level_two_render();
+extern void checking_level_transition();
 // removed from now it 
 //void init();
 extern void show_hat(); 
-extern void show_hound();
+//extern void show_hound();
 //void show_hound();
 // animation rest
 void reset_game_animation();
@@ -329,7 +331,7 @@ int main()
 	logOpen();
 	init_opengl();
     show_hat();
-    show_hound();
+    //show_hound();
     //init(); show hat should replace this
 	srand(time(NULL));
 	clock_gettime(CLOCK_REALTIME, &timePause);
@@ -373,7 +375,9 @@ int main()
       //  }
         if (gl.game_started) {
             render();
-            gl.player_score += 1;
+            show_score();
+            checking_level_transition();
+            //gl.player_score += 1;
         }
         // used to be !gl.game_started
 		if (gl.title_screen) {
@@ -381,7 +385,8 @@ int main()
             //previous_game_state = gl.title_screen;
         }
         if (gl.character_screen) {
-            character_screen_render();
+            show_score();
+            //level_two_render();
         //    previous_game_state = gl.character_screen;
         }
         //render();
@@ -442,7 +447,8 @@ void reset_game_animation() {
     g.ship.pos[1] = gl.yres / 2;
     g.ship.vel[0] = 0.0f;
     g.ship.vel[1] = 0.0f;
-    g.nbullets = 0; // clears bullets
+    g.nbullets = 0; // clears bullet
+    gl.current_level = 1;
     show_hat();
     
 }
@@ -852,9 +858,9 @@ extern void show_all(Rect *r, int xres, int yres,
 extern void show_title(Rect *r, int xres, int yres);
 //extern void draw_Iris();
 // same thing here removing parameters Rect *r,int xres, int yres
-extern void show_character_screen(Rect *r, int xres, int yres);
+extern void show_level_two(Rect *r, int xres, int yres);
 extern void levelText(Rect *r);
-extern void show_score(Rect *r, int yres, int player_score);
+//extern void show_score();
 
 
 void draw_ship() 
@@ -912,14 +918,14 @@ void draw_ship()
     }
 
 }
-void character_screen_render() 
+/*void level_two_render() 
 {
     Rect r;
-    show_character_screen(&r, gl.xres, gl.yres);
+    show_level_two(&r, gl.xres, gl.yres);
     //draw_Iris(); // removing the gl's
    //&r, gl.xres, gl.yres)
 }
-
+*/
 void title_render() 
 {
     Rect r;
@@ -961,20 +967,21 @@ void title_render()
     //glDisable(GL_TEXTURE_2D);
 }
 
+extern void check_level_change_color();
 void render()
 {
         
 	Rect r;
 	Rect stats;
 	glClear(GL_COLOR_BUFFER_BIT);
-
+    check_level_change_color();
 
 if (gl.game_started) {
 	stats.bot = 0;
 	stats.left = gl.xres-140;
 	stats.center = 0;
 	show_player_hearts(&stats, gl.yres, 5);
-    show_score(&r, gl.yres, gl.player_score);
+    show_score();
 	renderPLayerIcon(g.ship.pos[0], g.ship.pos[1], 40.0, g.ship.angle);
 ///-----------------------------------------------
     float wid = 120.0f;
@@ -986,6 +993,7 @@ if (gl.game_started) {
 	levelText(&r);
 	ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
     ggprint8b(&r, 16, 0x00ff00ff, "c for credits: ");
+    ggprint8b(&r, 15, 0x00ff00ff, "t for title");
 
     if (gl.credits) {
         show_all(&r, gl.xres, gl.yres, timeSpan, gl.credits);
@@ -996,7 +1004,7 @@ if (gl.game_started) {
     if(gl.player_score > 100)
         gl.main_hat =1;
     if(gl.main_hat) {
-        
+        //render_hound();
         //show_hound();
         glPushMatrix();
         // replacing with hat for the moment
@@ -1018,13 +1026,9 @@ if (gl.game_started) {
     }
     glEnd();
     glPopMatrix();
+    
     move_hat();
 }
-    //show_hound();
-    //glPushMatrix();
-    //glTranslatef(hound.pos[0], hound.pos[1], hound.pos[2]);
-    //glBindTexture(GL_TEXTURE_2D, gl.hound_texture);
-
 	//-------------------------------------------------------------------------
 	//Draw the ship
     // draw_ship();

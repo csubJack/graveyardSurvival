@@ -5,11 +5,12 @@
 #include <GL/glx.h>
 #include "types.h"
 #include "global_game.h"
+//#include "defs.h"
 //taking this, might just put it in a header file later for macros
 #define VecZero(v) (v)[0]=0.0,(v)[1]=0.0,(v)[2]=0.0
 #define MakeVector(x, y, z, v) (v)[0]=(x),(v)[1]=(y),(v)[2]=(z)
 
-
+void show_score();
 
 void show_all(Rect *r, int xres, int yres,
         float delta_time, int credits_activation)
@@ -57,6 +58,7 @@ void show_all(Rect *r, int xres, int yres,
 
 void show_title(Rect *r, int xres, int yres)
 {
+    gl.player_score = 0;
     //centering the title screen
     r->center = 30;
     r->bot = yres / 2 + 120;
@@ -77,41 +79,57 @@ extern void draw_ship();
 extern void renderPLayerIcon(float playerX, float playerY,
         float playerSize, float playerAngle);
 */
-void draw_Iris();
-void show_character_screen(Rect *r, int xres, int yres) 
-{
-//    int char_arr[10];
-    glClear(GL_COLOR_BUFFER_BIT);
-    r->center = 30;
-    r->bot = yres / 2 + 120;
-    r->left = xres/2;
-    ggprint16(r, 24, 0xffffffff, "Character Select Screen");
-    
-    r->bot = gl.yres - 20;
-    r->left = 10;
-    r->center = 0;
-    ggprint8b(r, 16, 0x000000ff, "k to return to main screen");
-    //glClear(GL_COLOR_BUFFER_BIT);
-    //glColor3f(0.0, 0.0, 0.0);
-    glEnable(GL_TEXTURE_2D);
-    // need to draw ships
-    // switching back to icons ?
-    void (*draw_ships[])() = {draw_ship};
-    // all the functions draw_ship, draw_Iris
-    //draw_ship();
-    for(int i = 0; i < 1; i++) {
-        draw_ships[i]();
+//------------------------------
 
+extern void levelText (Rect  *r);
+extern void render();
+
+void show_level_two_test()
+{
+    render();
+    gl.current_level = 2;
+    Rect r;
+    r.center = 30;
+    r.bot = gl.yres / 2 + 120;
+    r.left = gl.xres/2;
+    if(gl.player_score < 200)
+    {
+        ggprint16(&r, 16, 0x00ffffff, "Level Two");
     }
-    
 }
 
-void show_score(Rect *r, int yres, int player_score)
+//---------------------
+void show_score()
 {
-    r->bot = yres - 70;
-    r->left = 10;
-    r->center = 0;
-    ggprint8b(r, 16, 0x00ff00ff, "Score: %i", player_score);
+    if(gl.game_started) {
+    Rect r;
+    //gl.player_score = 0;
+    r.bot = gl.yres - 80;
+    r.left = 10;
+    r.center = 0;
+    ggprint8b(&r, 16, 0x00ff00ff, "Score: %i", gl.player_score);
+    if (gl.game_started)
+        gl.player_score += 1;
+    }
+   // if(gl.player_score >= 100 && !(gl.current_level == 2))
+      //  show_level_two_test();
+}
+// put this in main game so it can be called and transition fluidly
+// will replace the above if statement on transitioning to level 2
+//
+void checking_level_transition()
+{
+    if (gl.player_score >= 100) {
+        show_level_two_test();
+    }
+}
+
+void check_level_change_color()
+{
+    if (gl.current_level == 1) 
+        glClearColor(0.0, 0.0, 0.0, 0.0);
+    else if (gl.current_level == 2)
+        glClearColor(0.2, 0.2, 0.5, 1.0);
 }
 
 void show_hat()
@@ -119,10 +137,3 @@ void show_hat()
     MakeVector(-150.0, 180.0, 0.0, hat.pos);
     MakeVector(6.0, 15.0, 0.0, hat.vel);
 }
-
-void show_hound() 
-{
-    MakeVector(-150.0, 180.0, 0.0, hound.pos);
-    MakeVector(6.0, 15.0, 0.0, hound.vel);
-}
-

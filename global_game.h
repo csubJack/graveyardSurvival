@@ -29,6 +29,7 @@ class Global {
         int main_hat;
         int character_screen;
         int player_score;
+        int current_level;
         bool game_started;
         GLuint witch_texture;
         GLuint hat_texture;
@@ -46,6 +47,7 @@ class Global {
             credits = 0;
             title_screen = 1;
             character_screen = 0;
+            current_level = 1;
             game_started = false;
             //show_witch = false;
         }
