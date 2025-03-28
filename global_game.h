@@ -37,6 +37,7 @@ class Global {
         GLuint hound_trans_texture;
         float mouseXCoordinate;
         float mouseYCoordinate;
+        int player_health;
     
         Global() {
             xres = 640;
@@ -50,6 +51,7 @@ class Global {
             current_level = 1;
             game_started = false;
             //show_witch = false;
+            player_health = 10;
         }
     };
     
