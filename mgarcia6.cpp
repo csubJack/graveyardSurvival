@@ -23,7 +23,7 @@ void zombieHealthBar()
 }
 
 
-
+//tom foolerry
 
     //zombieHealth-- Under if (dist < (a->radius*a->)
     //then call for the new healthbar by doing drawHealthBar(zombieHealth));
