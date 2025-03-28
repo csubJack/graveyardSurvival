@@ -5,7 +5,7 @@
 #include <stdlib.h>
 using namespace std;
 
-int i = 799092;
+
 void zombieHealthBar()
 {
     int zombieHealth = 7;
