@@ -30,9 +30,11 @@ class Global {
         int character_screen;
         int player_score;
         int current_level;
+        int hat_silhouette;
         bool game_started;
         GLuint witch_texture;
         GLuint hat_texture;
+        GLuint hat_silhouette_texture;
         GLuint hound_texture;
         GLuint hound_trans_texture;
         float mouseXCoordinate;
@@ -52,6 +54,7 @@ class Global {
             game_started = false;
             //show_witch = false;
             player_health = 10;
+            hat_silhouette = 0;
         }
     };
     

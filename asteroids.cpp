@@ -514,8 +514,9 @@ void init_opengl(void)
 	glDisable(GL_FOG);
 	glDisable(GL_CULL_FACE);
 	//
-	//Clear the screen to black
-	glClearColor(0.0, 0.0, 0.0, 1.0);
+	//Clear the screen to black, switching this to forest framework rec
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+	//glClearColor(0.0, 0.0, 0.0, 1.0);
 	//Do this to allow fonts
 	glEnable(GL_TEXTURE_2D);
 	initialize_fonts();
@@ -525,6 +526,7 @@ void init_opengl(void)
 
 	
     glGenTextures(1, &gl.hat_texture);
+    glGenTextures(1, &gl.hat_silhouette_texture);
     glGenTextures(1, &gl.hound_texture);
 	loadPlayerIcon();
 
@@ -541,7 +543,19 @@ void init_opengl(void)
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
         GL_RGB, GL_UNSIGNED_BYTE, img[0].data);
-
+    //---------------------------------------------------------------
+    // silhouette
+    glBindTexture(GL_TEXTURE_2D, gl.hat_silhouette_texture);
+	//
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	//
+	//must build a new set of data...
+	unsigned char *silhouetteData = buildAlphaData(&img[0]);	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+								GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
+	free(silhouetteData);
+    //---------------------------------------------------------------
     // for the hound dog
     w = img[2].width;
     h = img[2].height;
@@ -735,6 +749,7 @@ int check_keys(XEvent *e)
            }
            break;
 		case XK_s:
+           gl.hat_silhouette ^= 1;
 			break;
 		case XK_Down:
 			break;
@@ -967,19 +982,36 @@ void title_render()
 {
     Rect r;
 //    Rect stats;
+    glClearColor(0.0, 0.0, 0.0, 0.0);
     float wid = 120;
     glClear(GL_COLOR_BUFFER_BIT);
+    //glClearColor(0.0, 0.0, 0.0, 0.0);
+    //--------------------------------------------
+    //forest framework
+    //glColor3f(1.0, 1.0, 1.0);
+    //--------------------------------------------
     if(!gl.game_started) {
          if (gl.title_screen) {
         show_title(&r, gl.xres, gl.yres);
         //draw_Iris(&r, gl.xres, gl.yres);
         gl.title_hat = 1;
-        glColor3f(1.0, 1.0, 1.0);
+        //glColor3f(1.0, 1.0, 1.0);
         glEnable(GL_TEXTURE_2D);
     if(gl.title_hat) {
         glPushMatrix();
         glTranslatef(hat.pos[0], hat.pos[1], hat.pos[2]);
-        glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
+        /// forest frame
+        if (gl.hat_silhouette) {
+            glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
+        } else {
+            glBindTexture(GL_TEXTURE_2D, gl.hat_silhouette_texture);
+			glEnable(GL_ALPHA_TEST);
+			glAlphaFunc(GL_GREATER, 0.0f);
+			glColor4ub(255,255,255,255);
+        }
+
+        /// ----------------------------------------------
+        //glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
     }
     glBegin(GL_QUADS);
     if(g.ship.vel[0] > 0.0) {
@@ -1049,7 +1081,16 @@ if (gl.game_started) {
         glPushMatrix();
         // replacing with hat for the moment
         glTranslatef(hat.pos[0], hat.pos[1], hat.pos[2]);
-        glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
+        if (gl.hat_silhouette) {
+            glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
+        } else {
+            glBindTexture(GL_TEXTURE_2D, gl.hat_silhouette_texture);
+            glEnable(GL_ALPHA_TEST);
+            glAlphaFunc(GL_GREATER, 0.0f);
+            glColor4ub(255,255,255,255);
+        }
+
+        //glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
    // }
     glBegin(GL_QUADS);
     if(g.ship.vel[0] > 0.0) {

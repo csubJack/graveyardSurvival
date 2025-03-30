@@ -1,5 +1,6 @@
-// header file, with my own contribution to the code
-//
+// Author: Diego Jimenez
+// Purpoes: header file, with my own contribution to the code
+// Application: Rendering text and backgrounds, keeping track of score
 //
 #include "fonts.h"
 #include <GL/glx.h>
@@ -9,7 +10,7 @@
 //taking this, might just put it in a header file later for macros
 #define VecZero(v) (v)[0]=0.0,(v)[1]=0.0,(v)[2]=0.0
 #define MakeVector(x, y, z, v) (v)[0]=(x),(v)[1]=(y),(v)[2]=(z)
-
+//---------------------------------------------------------------------------
 void show_score();
 
 void show_all(Rect *r, int xres, int yres,
@@ -25,14 +26,9 @@ void show_all(Rect *r, int xres, int yres,
         //bot_position = yres / 2 + 60;
         is_scrolling = true; // starts the scroll
     }
-   // if (!credits_activation) {
-   //     is_scrolling = false;
-   //     bot_position = yres / 2 + 60;
-   // }
     if (is_scrolling) {
         bot_position -= scroll_speed * delta_time;
     }
-    //bot_position -= scroll_speed * delta_time;
     // restarts the scrolling after it's off screen
     if (bot_position < -100) {
         //bot_position = yres / 2 + 60;
@@ -40,8 +36,6 @@ void show_all(Rect *r, int xres, int yres,
         bot_position = yres / 2 + 60;
         return;
     }
-
-    //bot_position -= scroll_speed * delta_time;
 
     r->center = 30;
     r->bot = (int)bot_position;
@@ -74,11 +68,6 @@ void show_title(Rect *r, int xres, int yres)
     ggprint8b(r, 16, 0x00ff00ff, "left and right arrow to rotate");
     ggprint8b(r, 16, 0x00ff00ff, "space to fire");
 }
-extern void draw_ship();
-/*
-extern void renderPLayerIcon(float playerX, float playerY,
-        float playerSize, float playerAngle);
-*/
 //------------------------------
 
 extern void levelText (Rect  *r);
@@ -92,7 +81,7 @@ void show_level_two_test()
     r.center = 30;
     r.bot = gl.yres / 2 + 120;
     r.left = gl.xres/2;
-    if(gl.player_score < 200)
+    if (gl.player_score < 200)
     {
         ggprint16(&r, 16, 0x00ffffff, "Level Two");
     }
@@ -101,7 +90,7 @@ void show_level_two_test()
 //---------------------
 void show_score()
 {
-    if(gl.game_started) {
+    if (gl.game_started) {
     Rect r;
     //gl.player_score = 0;
     r.bot = gl.yres - 80;
@@ -111,12 +100,7 @@ void show_score()
     if (gl.game_started)
         gl.player_score += 1;
     }
-   // if(gl.player_score >= 100 && !(gl.current_level == 2))
-      //  show_level_two_test();
 }
-// put this in main game so it can be called and transition fluidly
-// will replace the above if statement on transitioning to level 2
-//
 void checking_level_transition()
 {
     if (gl.player_score >= 100) {
@@ -132,6 +116,14 @@ void check_level_change_color()
         glClearColor(0.2, 0.2, 0.5, 1.0);
 }
 
+//void rendering_background() 
+//{
+    // a series of while loops could work
+    //
+//}
+
+
+//-------------------------------------------------------------------
 void show_hat()
 {
     MakeVector(-150.0, 180.0, 0.0, hat.pos);
