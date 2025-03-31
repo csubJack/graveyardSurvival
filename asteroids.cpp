@@ -1,6 +1,7 @@
 
 // Group Header Files: 
 #include "jsweeny.h"
+#include "mgarcia6.h"
 #include "types.h"
 #include "global_game.h"
 
@@ -125,43 +126,110 @@ Game g;
 Hat hat; 
 Hound hound;
 
-void draw_player_health_bar(float x, float y, int health, int max_health)
+//================Slime Enemy==============================
+// deleting slime from the linked list
+void deleteSlime(Slime *node)
 {
-    const float bar_width = 40.0f;
-    const float bar_height = 5.0f;
-    const float bar_y_offset = 30.0f; // Bar placement
-	
-    float health_x = x - bar_width/2;
-    float health_y = y + bar_y_offset;
-
-    // Draw background bar (missing health)
-    glColor3f(0.5f, 0.0f, 0.0f); // Dark red
-    glBegin(GL_QUADS);
-    glVertex2f(health_x, health_y);
-    glVertex2f(health_x + bar_width, health_y);
-    glVertex2f(health_x + bar_width, health_y + bar_height);
-    glVertex2f(health_x, health_y + bar_height);
-    glEnd();
-
-    float fill_width = (float)health / max_health * bar_width;
-
-    glColor3f(0.0f, 1.0f, 0.0f); 
-    glBegin(GL_QUADS);
-    glVertex2f(health_x, health_y);
-    glVertex2f(health_x + fill_width, health_y);
-    glVertex2f(health_x + fill_width, health_y + bar_height);
-    glVertex2f(health_x, health_y + bar_height);
-    glEnd();
-
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glBegin(GL_LINE_LOOP);
-    glVertex2f(health_x, health_y);
-    glVertex2f(health_x + bar_width, health_y);
-    glVertex2f(health_x + bar_width, health_y + bar_height);
-    glVertex2f(health_x, health_y + bar_height);
-    glEnd();
+    // remove node from doubly-linked list
+    if (node->prev == NULL) {
+        if (node->next == NULL) {
+            // one item in list.
+            g.slimeHead = NULL;
+        } else {
+            // start of list.
+            node->next->prev = NULL;
+            g.slimeHead = node->next;
+        }
+    } else {
+        if (node->next == NULL) {
+            // end of list.
+            node->prev->next = NULL;
+        } else {
+            // middle of list.
+            node->prev->next = node->next;
+            node->next->prev = node->prev;
+        }
+    }
+    delete node;
+    node = NULL;
 }
 
+void buildSlimeFragment(Slime *ts, Slime *s)
+{
+    // Build ts from s
+    ts->nverts = 8;
+    ts->radius = s->radius / 1.5; // size
+    Flt r2 = ts->radius / 2.0;
+    Flt angle = 0.0f;
+    Flt inc = (PI * 2.0) / (Flt)ts->nverts;
+    for (int i=0; i<ts->nverts; i++) {
+        // makes slimes round
+        ts->vert[i][0] = sin(angle) * (r2 + rnd() * ts->radius * 0.3);
+        ts->vert[i][1] = cos(angle) * (r2 + rnd() * ts->radius * 0.3);
+        angle += inc;
+    }
+    
+    // positioning
+    ts->pos[0] = s->pos[0] + rnd()*10.0-5.0;
+    ts->pos[1] = s->pos[1] + rnd()*10.0-5.0;
+    ts->pos[2] = 0.0f;
+    ts->angle = 0.0;
+    ts->rotate = s->rotate + (rnd() * 2.0 - 1.0); // rotating
+    
+    // color
+    ts->color[0] = 0.0; // r
+    ts->color[1] = 0.7 + rnd()*0.3; // g
+    ts->color[2] = 0.0; // b
+    
+    // speed
+    ts->vel[0] = s->vel[0] + (rnd()*1.0-0.5);  // Was 2.0-1.0
+    ts->vel[1] = s->vel[1] + (rnd()*1.0-0.5);
+}
+
+void initSlimes() 
+{
+    for (int i = 0; i < 5; i++) {
+        Slime *s = new Slime;
+        s->nverts = 8;
+        s->radius = 30.0 + rnd() * 40.0; // size
+        
+        // makes slimes round
+        Flt r2 = s->radius / 2.0;
+        Flt angle = 0.0f;
+        Flt inc = (PI * 2.0) / (Flt)s->nverts;
+        for (int j=0; j<s->nverts; j++) {
+            s->vert[j][0] = sin(angle) * (r2 + rnd() * s->radius * 0.3);
+            s->vert[j][1] = cos(angle) * (r2 + rnd() * s->radius * 0.3);
+            angle += inc;
+        }
+        
+        // positioning
+        float dist = rnd() * 200.0 + 200.0;
+        float ang = rnd() * PI * 2.0;
+        s->pos[0] = g.ship.pos[0] + cos(ang) * dist;
+        s->pos[1] = g.ship.pos[1] + sin(ang) * dist;
+        s->pos[2] = 0.0f;
+        
+        s->angle = 0.0;
+        s->rotate = rnd() * 2.0 - 1.0; // rotating
+        
+        s->color[0] = 0.0;
+        s->color[1] = 0.7 + rnd()*0.3;
+        s->color[2] = 0.0;
+        
+        // movement
+        s->vel[0] = rnd()*0.4-0.2;  // Was 0.8-0.4
+        s->vel[1] = rnd()*0.4-0.2; 
+        
+        // add to front of slime linked list
+        s->next = g.slimeHead;
+        if (g.slimeHead != NULL)
+            g.slimeHead->prev = s;
+        g.slimeHead = s;
+        g.nslimes++;
+    }
+}
+//=========================================================
 
 GLuint playerTexture;
 // Jack
@@ -900,6 +968,131 @@ else if (g.ship.pos[1] > (float)gl.yres) {
 		g.ship.pos[0] += xdir * 2.0f;
 		g.ship.pos[1] += ydir * 2.0f;
 	}
+    //Slime stuff
+    // Update slime positions and chase player
+    Slime *s = g.slimeHead;
+    while (s) {
+        // Simply update position based on current velocity
+        // (No homing/tracking code)
+        s->pos[0] += s->vel[0];
+        s->pos[1] += s->vel[1];
+        
+        // Check for collision with window edges
+        if (s->pos[0] < 0.0) {
+            s->pos[0] = 0.0;
+            s->vel[0] = -s->vel[0] * 0.5;  // Bounce off walls with some energy loss
+        }
+        else if (s->pos[0] > (float)gl.xres) {
+            s->pos[0] = (float)gl.xres;
+            s->vel[0] = -s->vel[0] * 0.5;
+        }
+        
+        if (s->pos[1] < 0.0) {
+            s->pos[1] = 0.0;
+            s->vel[1] = -s->vel[1] * 0.5;
+        }
+        else if (s->pos[1] > (float)gl.yres) {
+            s->pos[1] = (float)gl.yres;
+            s->vel[1] = -s->vel[1] * 0.5;
+        }
+        
+        s->angle += s->rotate;  // Still allow rotation for visual effect
+        s = s->next;
+    }
+
+    // Slimes collision with bullets
+    s = g.slimeHead;
+    while (s) {
+        // Is there a bullet within its radius?
+        int i = 0;
+        while (i < g.nbullets) {
+            Bullet *b = &g.barr[i];
+            Flt d0 = b->pos[0] - s->pos[0];
+            Flt d1 = b->pos[1] - s->pos[1];
+            Flt dist = (d0*d0 + d1*d1);
+
+            if (dist < (s->radius*s->radius)) {
+                // This slime is hit
+
+                // Scoring based on slime size
+                gl.player_score += (int)(50.0 / (s->radius / 30.0));
+
+                if (s->radius > 15.0 && s->isParent) {
+                    // Split into 3 smaller slimes
+                    for (int k=0; k<3; k++) {
+                        Slime *ts = new Slime;
+                        buildSlimeFragment(ts, s);
+                        ts->isParent = false;
+
+                        // Add deviation for 3 distinct directions
+                        float angle = (2.0 * PI * k) / 3.0;
+                        ts->pos[0] += cos(angle) * s->radius * 0.5;
+                        ts->pos[1] += sin(angle) * s->radius * 0.5;
+                        ts->vel[0] += cos(angle) * 0.5;  // Was 1.0
+                        ts->vel[1] += sin(angle) * 0.5; 
+
+                        // Add to front of slime linked list
+                        ts->next = g.slimeHead;
+                        if (g.slimeHead != NULL)
+                            g.slimeHead->prev = ts;
+                        g.slimeHead = ts;
+                        g.nslimes++;
+                    }
+                }
+
+                // Delete the original slime
+                Slime *temps = s->next;
+                deleteSlime(s);
+                s = temps;
+                g.nslimes--;
+
+                // Delete the bullet
+                memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
+                g.nbullets--;
+
+                // Check if we're at the end of the list
+                if (s == NULL)
+                    break;
+                continue;
+            }
+            i++;
+        }
+
+        // Check for collision with player (damage player)
+        if (s != NULL) {
+            Flt d0 = g.ship.pos[0] - s->pos[0];
+            Flt d1 = g.ship.pos[1] - s->pos[1];
+            Flt dist = sqrt(d0*d0 + d1*d1);
+
+            if (dist < (s->radius + 10.0)) {  // 10 is approximate player radius
+                // Damage player based on slime size
+                gl.player_health -= 5 + (int)(s->radius / 10.0);
+                if (gl.player_health < 0) gl.player_health = 0;
+
+                // Knockback player
+                float knockback = 5.0 + s->radius / 10.0;
+                if (dist > 0) {
+                    g.ship.vel[0] += (d0/dist) * knockback;
+                    g.ship.vel[1] += (d1/dist) * knockback;
+                }
+
+                // Don't destroy slime on contact, just push it back
+                if (dist > 0) {
+                    s->vel[0] -= (d0/dist) * 3.0;
+                    s->vel[1] -= (d1/dist) * 3.0;
+                }
+            }
+        }
+
+        if (s != NULL) {
+            s = s->next;
+        }
+    }
+
+    // If all slimes are destroyed, spawn a new wave
+    if (g.nslimes == 0) {
+        initSlimes();
+    }
 	
 }
 
@@ -1181,6 +1374,63 @@ if (gl.game_started) {
 		glEnd();
 	}
     glEnable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_2D);
+    // Draw the slimes
+    glEnable(GL_TEXTURE_2D);
+    Slime *s = g.slimeHead;
+    while (s) {
+        glColor3fv(s->color);
+        glPushMatrix();
+        glTranslatef(s->pos[0], s->pos[1], s->pos[2]);
+        glRotatef(s->angle, 0.0f, 0.0f, 1.0f);
+
+        // Draw slime body (filled polygon)
+        glBegin(GL_POLYGON);
+        for (int j=0; j<s->nverts; j++) {
+            glVertex2f(s->vert[j][0], s->vert[j][1]);
+        }
+        glEnd();
+
+        // Draw slime outline
+        glColor3f(0.0f, 0.5f, 0.0f);
+        glBegin(GL_LINE_LOOP);
+        for (int j=0; j<s->nverts; j++) {
+            glVertex2f(s->vert[j][0], s->vert[j][1]);
+        }
+        glEnd();
+
+        // Draw slime eyes (black)
+        glColor3f(0.0f, 0.0f, 0.0f);
+        float eyeSize = s->radius * 0.15;
+        glBegin(GL_POLYGON);
+        for (int i = 0; i < 8; i++) {
+            float angle = (2.0 * PI * i) / 8.0;
+            glVertex2f(s->radius * 0.3 + cos(angle) * eyeSize,
+                      s->radius * 0.3 + sin(angle) * eyeSize);
+        }
+        glEnd();
+
+        glBegin(GL_POLYGON);
+        for (int i = 0; i < 8; i++) {
+            float angle = (2.0 * PI * i) / 8.0;
+            glVertex2f(-s->radius * 0.3 + cos(angle) * eyeSize,
+                      s->radius * 0.3 + sin(angle) * eyeSize);
+        }
+        glEnd();
+
+        // Draw slime mouth (black)
+        glBegin(GL_LINE_STRIP);
+        for (float i = -0.3; i <= 0.3; i += 0.05) {
+            glVertex2f(i * s->radius, -0.1 * s->radius + sin(i*3) * 0.1 * s->radius);
+        }
+        glEnd();
+
+        glPopMatrix();
+        s = s->next;
+    }
+
+    // Add slime count to UI
+    ggprint8b(&r, 16, 0x00ffff00, "n slimes: %i", g.nslimes);
 //--------------------------------------------------------------------------
 }
 }

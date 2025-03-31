@@ -101,6 +101,26 @@ class Global {
         Vec vel;
     };
     
+    class Slime {
+    public:
+        Vec pos;
+        Vec vel;
+        int nverts;
+        Flt radius;
+        Vec vert[8];
+        float angle;
+        float rotate;
+        float color[3];
+        struct Slime *prev;
+        struct Slime *next;
+        bool isParent;
+    public:
+        Slime() {
+            prev = NULL;
+            next = NULL;
+            isParent = true;
+        }
+    };
     
     class Game {
     public:
@@ -108,6 +128,8 @@ class Global {
       //  Witch witch;
         Bullet *barr;
         int nbullets;
+        Slime *slimeHead; //new
+        int nslimes; //new
         // struct timespec bulletTimer;
         struct timespec mouseThrustTimer;
         bool mouseThrustOn;
@@ -115,10 +137,18 @@ class Global {
         Game() {
             barr = new Bullet[22];
             nbullets = 0;
-        
+            slimeHead = NULL;
+            nslimes = 0;
         }
         ~Game() {
             delete [] barr;
+            // Clean up slimes
+            Slime *s = slimeHead;
+            while (s) {
+                Slime *next = s->next;
+                delete s;
+                s = next;
+            }
         }
     };
     
