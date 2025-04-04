@@ -4,6 +4,7 @@
 #include "mgarcia6.h"
 #include "types.h"
 #include "global_game.h"
+#include "jcornejo.h"
 
 #include <iostream>
 #include <cstdlib>
@@ -112,10 +113,11 @@ public:
     }
 };
 
-Image img[3] = {
+Image img[4] = {
 "./images/hat.png",
 "./images/standing-still.png",
-"./images/houndDog2.png"
+"./images/houndDog2.png",
+"./images/pixel_skeleton"
 };
 
 
@@ -1457,5 +1459,7 @@ if (gl.game_started) {
         ggprint8b(&r, 16, 0x00ffff00, "n slimes: %i", g.nslimes);
     //}
 //--------------------------------------------------------------------------
+
+    extern void drawSkeleton(); // Julio
 }
 }

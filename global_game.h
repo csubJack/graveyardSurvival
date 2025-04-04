@@ -125,6 +125,17 @@ class Global {
             isParent = true;
         }
     };
+
+     // Will use for skeleton enemy --  Julio 
+    /*class Skeleton {
+        public:
+            Vec pos;
+            Vec vel;
+        public:
+            Skeleton() {
+                
+            }
+    };*/
     
     class Game {
     public:
@@ -155,6 +166,7 @@ class Global {
             }
         }
     };
+
     
 
     extern Global gl;
