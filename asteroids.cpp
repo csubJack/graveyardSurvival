@@ -117,7 +117,7 @@ Image img[4] = {
 "./images/hat.png",
 "./images/standing-still.png",
 "./images/houndDog2.png",
-"./images/pixel_skeleton"
+"./images/pixel_skeleton.png"
 };
 
 
