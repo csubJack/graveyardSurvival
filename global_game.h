@@ -40,6 +40,8 @@ class Global {
         float mouseXCoordinate;
         float mouseYCoordinate;
         int player_health;
+        float player_center_x;
+        float player_center_y;
     
         Global() {
             xres = 640;
@@ -55,6 +57,8 @@ class Global {
             //show_witch = false;
             player_health = 10;
             hat_silhouette = 0;
+            player_center_x = 0.0f;
+            player_center_y = 0.0f;
         }
     };
     

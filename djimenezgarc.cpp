@@ -88,6 +88,7 @@ void show_level_two_test()
 }
 
 //---------------------
+// include time in here
 void show_score()
 {
     if (gl.game_started) {
@@ -97,13 +98,20 @@ void show_score()
     r.left = 10;
     r.center = 0;
     ggprint8b(&r, 16, 0x00ff00ff, "Score: %i", gl.player_score);
-    if (gl.game_started)
-        gl.player_score += 1;
+    //if (gl.game_started)
+      //  gl.player_score += 1;
     }
 }
 void checking_level_transition()
 {
-    if (gl.player_score >= 100) {
+    if (gl.player_score >= 1000) {
+        while (g.slimeHead) {
+            Slime *s = g.slimeHead;
+            g.slimeHead = g.slimeHead->next;
+            delete s;
+        }
+        g.nslimes = 0;
+
         show_level_two_test();
     }
 }
@@ -115,7 +123,7 @@ void check_level_change_color()
     else if (gl.current_level == 2)
         glClearColor(0.2, 0.2, 0.5, 1.0);
 }
-
+//------------------------------------------------------------------
 //void rendering_background() 
 //{
     // a series of while loops could work
@@ -126,6 +134,52 @@ void check_level_change_color()
 //-------------------------------------------------------------------
 void show_hat()
 {
-    MakeVector(-150.0, 180.0, 0.0, hat.pos);
-    MakeVector(6.0, 15.0, 0.0, hat.vel);
+    // need this for main hat's triple bounce pattern
+    static int bounce_count = 1;
+    int x_speed = 2;
+    int y_speed = 5;
+
+    if (gl.title_screen) {
+        MakeVector(-150.0, 180.0, 0.0, hat.pos);
+        MakeVector(6.0, 15.0, 0.0, hat.vel);
+        bounce_count = 1;
+    } else {
+        MakeVector(-150.0, 180.0, 0.0, hat.pos);
+        while (bounce_count < 20)
+        {
+            MakeVector(x_speed+bounce_count, y_speed+bounce_count, 0.0, hat.vel);
+            bounce_count++;
+        }
+        /*if (bounce_count % 3 == 2)
+            MakeVector(30.0, 50.0, 0.0, hat.vel);
+        else 
+            MakeVector(2.0, 5.0, 0.0, hat.vel);
+        bounce_count++;
+        */
+    }
+}
+void move_slimes()
+{
+    Slime * s = g.slimeHead;
+    float speed = 0.5f;
+    while (s) {
+        float dx = gl.player_center_x - s->pos[0];
+        float dy = gl.player_center_y - s->pos[1];
+
+        float dist = sqrt(dx * dx + dy * dy);
+        if(dist >0.1f) {
+            dx /= dist;
+            dy /= dist;
+
+            s->vel[0] = dx * speed;
+            s->vel[1] = dy * speed;
+        } else {
+            s->vel[0] = 0.0f;
+            s->vel[1] = 0.0f;
+        }
+        s->pos[0] += s->vel[0];
+        s->pos[1] += s->vel[1];
+
+        s= s->next;
+    }
 }

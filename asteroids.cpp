@@ -188,45 +188,47 @@ void buildSlimeFragment(Slime *ts, Slime *s)
 
 void initSlimes() 
 {
-    for (int i = 0; i < 5; i++) {
-        Slime *s = new Slime;
-        s->nverts = 8;
-        s->radius = 30.0 + rnd() * 40.0; // size
+    if (gl.current_level == 1) {
+        for (int i = 0; i < 5; i++) {
+            Slime *s = new Slime;
+            s->nverts = 8;
+            s->radius = 30.0 + rnd() * 40.0; // size
         
-        // makes slimes round
-        Flt r2 = s->radius / 2.0;
-        Flt angle = 0.0f;
-        Flt inc = (PI * 2.0) / (Flt)s->nverts;
-        for (int j=0; j<s->nverts; j++) {
-            s->vert[j][0] = sin(angle) * (r2 + rnd() * s->radius * 0.3);
-            s->vert[j][1] = cos(angle) * (r2 + rnd() * s->radius * 0.3);
-            angle += inc;
+            // makes slimes round
+            Flt r2 = s->radius / 2.0;
+            Flt angle = 0.0f;
+            Flt inc = (PI * 2.0) / (Flt)s->nverts;
+            for (int j=0; j<s->nverts; j++) {
+                s->vert[j][0] = sin(angle) * (r2 + rnd() * s->radius * 0.3);
+                s->vert[j][1] = cos(angle) * (r2 + rnd() * s->radius * 0.3);
+                angle += inc;
+            }
+        
+            // positioning
+            float dist = rnd() * 200.0 + 200.0;
+            float ang = rnd() * PI * 2.0;
+            s->pos[0] = g.ship.pos[0] + cos(ang) * dist;
+            s->pos[1] = g.ship.pos[1] + sin(ang) * dist;
+            s->pos[2] = 0.0f;
+        
+            s->angle = 0.0;
+            s->rotate = rnd() * 2.0 - 1.0; // rotating
+        
+            s->color[0] = 0.0;
+            s->color[1] = 0.7 + rnd()*0.3;
+            s->color[2] = 0.0;
+        
+            // movement
+            s->vel[0] = rnd()*0.4-0.2;  // Was 0.8-0.4
+            s->vel[1] = rnd()*0.4-0.2; 
+        
+            // add to front of slime linked list
+            s->next = g.slimeHead;
+            if (g.slimeHead != NULL)
+                g.slimeHead->prev = s;
+            g.slimeHead = s;
+            g.nslimes++;
         }
-        
-        // positioning
-        float dist = rnd() * 200.0 + 200.0;
-        float ang = rnd() * PI * 2.0;
-        s->pos[0] = g.ship.pos[0] + cos(ang) * dist;
-        s->pos[1] = g.ship.pos[1] + sin(ang) * dist;
-        s->pos[2] = 0.0f;
-        
-        s->angle = 0.0;
-        s->rotate = rnd() * 2.0 - 1.0; // rotating
-        
-        s->color[0] = 0.0;
-        s->color[1] = 0.7 + rnd()*0.3;
-        s->color[2] = 0.0;
-        
-        // movement
-        s->vel[0] = rnd()*0.4-0.2;  // Was 0.8-0.4
-        s->vel[1] = rnd()*0.4-0.2; 
-        
-        // add to front of slime linked list
-        s->next = g.slimeHead;
-        if (g.slimeHead != NULL)
-            g.slimeHead->prev = s;
-        g.slimeHead = s;
-        g.nslimes++;
     }
 }
 //=========================================================
@@ -257,8 +259,10 @@ void loadPlayerIcon() {
 // Jack
 
 void renderPLayerIcon(float playerX, float playerY, float playerSize, float playerAngle) {
-	glPushMatrix();
-
+    gl.player_center_x = playerX;
+    gl.player_center_y = playerY;
+    
+    glPushMatrix();
 	// Fixed the Red issue
 	glColor3f(1.0, 1.0, 1.0);
 	
@@ -423,6 +427,7 @@ extern void checking_level_transition();
 // removed from now it 
 //void init();
 extern void show_hat(); 
+extern void move_slimes();
 //extern void show_hound();
 //void show_hound();
 // animation rest
@@ -435,6 +440,8 @@ int main()
 {
 	logOpen();
 	init_opengl();
+    gl.title_hat = 1;
+    gl.main_hat = 0;
     show_hat();
     //show_hound();
     //init(); show hat should replace this
@@ -481,6 +488,7 @@ int main()
         if (gl.game_started) {
             render();
             show_score();
+            move_slimes();
             checking_level_transition();
             //gl.player_score += 1;
         }
@@ -553,8 +561,16 @@ void reset_game_animation() {
     g.ship.vel[0] = 0.0f;
     g.ship.vel[1] = 0.0f;
     g.nbullets = 0; // clears bullet
-    gl.current_level = 1;
+    //gl.current_level = 1;
     show_hat();
+    while (g.slimeHead) {
+        Slime *s = g.slimeHead;
+        g.slimeHead = g.slimeHead->next;
+        delete s;
+    }
+    g.nslimes = 0;
+    initSlimes();
+    
     
 }
 
@@ -802,6 +818,7 @@ int check_keys(XEvent *e)
            if(gl.game_started) {
                gl.game_started = !gl.game_started;
                gl.title_screen = !gl.title_screen;
+               gl.current_level = 1;
            }
            break;
         case XK_k:
@@ -819,6 +836,9 @@ int check_keys(XEvent *e)
 		case XK_s:
            gl.hat_silhouette ^= 1;
 			break;
+        case XK_1:
+            gl.player_score += 1000;
+            break;
 		case XK_Down:
 			break;
 		case XK_equal:
@@ -844,7 +864,8 @@ void move_hat()
         hat.vel[0] = -hat.vel[0];
         addgrav = 0;
     }
-    if ((hat.pos[1] < 150.0 && hat.vel[1] < 0.0) ||
+    //  changing 150 to 0
+    if ((hat.pos[1] < 100.0 && hat.vel[1] < 0.0) ||
         (hat.pos[1] >= (float)gl.yres && hat.vel[1] > 0.0)) {
         hat.vel[1] = -hat.vel[1];
         addgrav = 0;
@@ -1090,7 +1111,7 @@ else if (g.ship.pos[1] > (float)gl.yres) {
     }
 
     // If all slimes are destroyed, spawn a new wave
-    if (g.nslimes == 0) {
+    if (g.nslimes == 0 && gl.current_level == 1) {
         initSlimes();
     }
 	
@@ -1266,8 +1287,10 @@ if (gl.game_started) {
     glColor3f(1.0, 1.0, 1.0);
     //glEnable(GL_TEXTURE_2D);
     //gl.main_hat = 1;
-    if(gl.player_score > 100)
-        gl.main_hat =1;
+    if (gl.player_score >= 1000)
+        gl.main_hat = 1;
+    else if (gl.player_score < 1000)
+        gl.main_hat = 0;
     if(gl.main_hat) {
         //render_hound();
         //show_hound();
@@ -1428,9 +1451,11 @@ if (gl.game_started) {
         glPopMatrix();
         s = s->next;
     }
-
+    r.bot = gl.yres - 100;
     // Add slime count to UI
-    ggprint8b(&r, 16, 0x00ffff00, "n slimes: %i", g.nslimes);
+    //if (gl.current_level == 1) {
+        ggprint8b(&r, 16, 0x00ffff00, "n slimes: %i", g.nslimes);
+    //}
 //--------------------------------------------------------------------------
 }
 }
