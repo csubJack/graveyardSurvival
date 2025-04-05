@@ -431,6 +431,7 @@ extern void checking_level_transition();
 //void init();
 extern void show_hat(); 
 extern void move_slimes();
+extern void checking_invincible_timer();
 //extern void show_hound();
 //void show_hound();
 // animation rest
@@ -443,6 +444,7 @@ int main()
 {
 	logOpen();
 	init_opengl();
+    //checking_invincible_timer();
     gl.title_hat = 1;
     gl.main_hat = 0;
     show_hat();
@@ -475,7 +477,10 @@ int main()
             if (gl.game_started) {
                 reset_game_animation();
                 reset_game_stats(); // update function in jsweeny.cpp as needed
-            } else {
+            } else if (gl.game_over_screen) {
+                reset_game_animation();
+                reset_title_animation();
+            }else {
                 reset_title_animation();
                 //reset_character_screen_animation();
                 // next would be reset_character_screen
@@ -483,6 +488,7 @@ int main()
             previous_game_state = gl.game_started;
         }
         if (gl.game_started) {
+            checking_invincible_timer();
             render();
             show_score();
             move_slimes();
@@ -492,6 +498,7 @@ int main()
         if (gl.player_health <= 0 && gl.game_started) {
             Rect r; 
             gl.game_over_screen = 1;
+            gl.current_level = 1;
             game_over(&r, gl.xres, gl.yres);
 
         }
@@ -884,6 +891,19 @@ void move_hat()
     //Gravity?
     if (addgrav)
         hat.vel[1] -= 0.75;
+    float dist = sqrt (
+            (hat.pos[0] - g.ship.pos[0]) * (hat.pos[0] - g.ship.pos[0])
+            + (hat.pos[1] - g.ship.pos[1]) * (hat.pos[1] - g.ship.pos[1])
+            );
+    float hat_radius = 100.0;
+    if (dist < hat_radius + gl.player_size){
+        if (!gl.player_invincible) {
+            gl.player_health -= 3;
+            gl.player_invincible = 1;
+            gl.invincible_timer = 3;
+
+        }
+    }
 }
 
 void move_hound()
@@ -1096,9 +1116,15 @@ else if (g.ship.pos[1] > (float)gl.yres) {
             Flt d1 = g.ship.pos[1] - s->pos[1];
             Flt dist = sqrt(d0*d0 + d1*d1);
 
-            if (dist < (s->radius + 10.0)) {  // 10 is approximate player radius
+            if (dist < (s->radius + gl.player_size)) {  // 10 is approximate player radius
                 // Damage player based on slime size
-                gl.player_health -= 5 + (int)(s->radius / 50.0);
+                if (!gl.player_invincible) {
+                    gl.player_health -= 2 + (int)(s->radius / 50.0);
+                    gl.player_invincible = 1;
+                    gl.invincible_timer = 3;
+
+                }
+                //gl.player_health -= 2 + (int)(s->radius / 50.0);
                 if (gl.player_health < 0) gl.player_health = 0;
 
                 // // Knockback player

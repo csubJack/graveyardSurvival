@@ -33,6 +33,9 @@ class Global {
         int player_score;
         int bullets_shot;
         int monsters_killed;
+        int player_size;
+        int player_invincible;
+        int invincible_timer;
         float bullet_accuracy;
         int current_level;
         // end Player Metrics 
@@ -61,7 +64,9 @@ class Global {
             character_screen = 0;
             current_level = 1;
             game_started = false;
-            player_health = 10;
+            player_size = 10.0;
+            player_health = 100;
+            player_invincible = 0;
             hat_silhouette = 0;
             player_center_x = 0.0f;
             player_center_y = 0.0f;

@@ -124,13 +124,16 @@ void check_level_change_color()
         glClearColor(0.2, 0.2, 0.5, 1.0);
 }
 //------------------------------------------------------------------
-//void rendering_background() 
-//{
-    // a series of while loops could work
-    //
-//}
+/*void rendering_background() 
+{
+     a series of while loops could work
+     level 1 grave stones, tombs, and sarcaphagi
+     level 2 witch's house
+     level 3
+    
+}
 
-
+*/
 //-------------------------------------------------------------------
 void show_hat()
 {
@@ -181,5 +184,16 @@ void move_slimes()
         s->pos[1] += s->vel[1];
 
         s= s->next;
+    }
+}
+
+void checking_invincible_timer() 
+{
+    if (gl.player_invincible) {
+        gl.invincible_timer--;
+        if (gl.invincible_timer <= 0) {
+            gl.player_invincible = 0;
+            gl.invincible_timer = 0;
+        }
     }
 }
