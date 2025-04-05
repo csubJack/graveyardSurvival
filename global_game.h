@@ -25,11 +25,18 @@ class Global {
         int mouse_cursor_on;
         int credits;
         int title_screen;
+        int game_over_screen;
         int title_hat;
         int main_hat;
         int character_screen;
+        // Player metrics 
         int player_score;
+        int bullets_shot;
+        int monsters_killed;
+        float bullet_accuracy;
         int current_level;
+        // end Player Metrics 
+
         int hat_silhouette;
         bool game_started;
         GLuint witch_texture;
@@ -47,14 +54,13 @@ class Global {
             xres = 640;
             yres = 480;
             memset(keys, 0, 65536);
-            // mouse value 1 = true = mouse is a regular mouse.
             mouse_cursor_on = 1;
             credits = 0;
             title_screen = 1;
+            game_over_screen = 0;
             character_screen = 0;
             current_level = 1;
             game_started = false;
-            //show_witch = false;
             player_health = 10;
             hat_silhouette = 0;
             player_center_x = 0.0f;
@@ -70,6 +76,7 @@ class Global {
         Vec acc;
         float angle;
         float color[3];
+        int playerHealth;
     public:
         Ship() {
             pos[0] = (Flt)(640/2); //xres 

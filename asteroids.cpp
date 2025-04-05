@@ -423,6 +423,7 @@ int check_keys(XEvent *e);
 void physics();
 void render();
 void title_render();
+void game_over(Rect *r, float xres, float yres);
 extern void show_score();
 void level_two_render();
 extern void checking_level_transition();
@@ -473,6 +474,7 @@ int main()
         if (gl.game_started != previous_game_state) {
             if (gl.game_started) {
                 reset_game_animation();
+                reset_game_stats(); // update function in jsweeny.cpp as needed
             } else {
                 reset_title_animation();
                 //reset_character_screen_animation();
@@ -480,19 +482,18 @@ int main()
             }
             previous_game_state = gl.game_started;
         }
-       // if (gl.title_screen != previous_game_state) {
-         //   if (gl.title_screen) {
-          //      reset_title_animation();
-            //} else {
-          //      reset_game_animation();
-        //    }
-      //  }
         if (gl.game_started) {
             render();
             show_score();
             move_slimes();
             checking_level_transition();
             //gl.player_score += 1;
+        }
+        if (gl.player_health <= 0 && gl.game_started) {
+            Rect r; 
+            gl.game_over_screen = 1;
+            game_over(&r, gl.xres, gl.yres);
+
         }
         // used to be !gl.game_started
 		if (gl.title_screen) {
@@ -511,6 +512,8 @@ int main()
 	logClose();
 	return 0;
 }
+
+
 //------------------------------------------------
 //from rainforest framework
 unsigned char *buildAlphaData(Image *img)
@@ -564,7 +567,7 @@ void reset_game_animation() {
     g.ship.vel[1] = 0.0f;
     g.nbullets = 0; // clears bullet
     //gl.current_level = 1;
-    show_hat();
+    // show_hat();
     while (g.slimeHead) {
         Slime *s = g.slimeHead;
         g.slimeHead = g.slimeHead->next;
@@ -799,6 +802,12 @@ int check_keys(XEvent *e)
                 //    witch.pos[0] = -250;
                // }
                 break;
+            }
+
+            if (gl.game_over_screen) {
+                gl.title_screen = 1; // space takes you back to title screen
+                gl.game_over_screen = 0;
+                gl.game_started = false; // game is over
             }
            // gl.title_screen = !gl.title_screen;
             break;
@@ -1068,7 +1077,7 @@ else if (g.ship.pos[1] > (float)gl.yres) {
                 deleteSlime(s);
                 s = temps;
                 g.nslimes--;
-
+                gl.monsters_killed++;
                 // Delete the bullet
                 memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
                 g.nbullets--;
@@ -1089,15 +1098,15 @@ else if (g.ship.pos[1] > (float)gl.yres) {
 
             if (dist < (s->radius + 10.0)) {  // 10 is approximate player radius
                 // Damage player based on slime size
-                gl.player_health -= 5 + (int)(s->radius / 10.0);
+                gl.player_health -= 5 + (int)(s->radius / 50.0);
                 if (gl.player_health < 0) gl.player_health = 0;
 
-                // Knockback player
-                float knockback = 5.0 + s->radius / 10.0;
-                if (dist > 0) {
-                    g.ship.vel[0] += (d0/dist) * knockback;
-                    g.ship.vel[1] += (d1/dist) * knockback;
-                }
+                // // Knockback player
+                // float knockback = 5.0 + s->radius / 10.0;
+                // if (dist > 0) {
+                //     g.ship.vel[0] += (d0/dist) * knockback;
+                //     g.ship.vel[1] += (d1/dist) * knockback;
+                // }
 
                 // Don't destroy slime on contact, just push it back
                 if (dist > 0) {
@@ -1133,7 +1142,6 @@ extern void levelText(Rect *r);
 
 void draw_ship() 
 {
-    //Draw the ship
     glColor3fv(g.ship.color);
     glPushMatrix();
     glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
@@ -1252,6 +1260,9 @@ void title_render()
     //glDisable(GL_TEXTURE_2D);
 }
 
+
+
+
 extern void check_level_change_color();
 void render()
 {
@@ -1328,54 +1339,7 @@ if (gl.game_started) {
     
     move_hat();
 }
-	//-------------------------------------------------------------------------
-	//Draw the ship
-    // draw_ship();
-    /*glColor3fv(g.ship.color);
-	glPushMatrix();
-	glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
-	float angle = atan2(g.ship.dir[1], g.ship.dir[0]);
-	glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-    glBegin(GL_TRIANGLES);
-	glVertex2f(-10.0f, -10.0f);
-	glVertex2f(  0.0f, 20.0f);
-	glVertex2f( 10.0f, -10.0f);
 
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glVertex2f(-12.0f, -10.0f); // bottom left
-	glVertex2f(  0.0f,  20.0f); // top left
-	glVertex2f(  0.0f,  -10.0f); // bottom left center changing from -6 to -10
-	glVertex2f(  0.0f,  -10.0f); //bottom right center same as above
-	glVertex2f(  0.0f,  20.0f); // top right
-	glVertex2f( 12.0f, -10.0f); // bottom right
-    glEnd();
-	glColor3f(1.0f, 0.0f, 0.0f);
-	glBegin(GL_POINTS);
-	glVertex2f(0.0f, 0.0f);
-	glEnd();
-    glPopMatrix();
-	if (gl.keys[XK_Up] || g.mouseThrustOn) {
-		int i;
-		//draw thrust
-		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-		//convert angle to a vector
-		Flt xdir = cos(rad);
-		Flt ydir = sin(rad);
-		Flt xs,ys,xe,ye,r;
-		glBegin(GL_LINES);
-		for (i=0; i<16; i++) {
-			xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
-			ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
-			r = rnd()*40.0+40.0;
-			xe = -xdir * r + rnd() * 18.0 - 9.0;
-			ye = -ydir * r + rnd() * 18.0 - 9.0;
-			glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
-			glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
-			glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
-		}
-		glEnd();
-	} */
-	//----------------------------------------------------------------------
 	
 	//-------------------------------------------------------------------------
 	//Draw the bullets

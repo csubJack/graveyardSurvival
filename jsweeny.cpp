@@ -6,8 +6,7 @@
 #include "types.h"
 #include "global_game.h"
 #include <cmath>
-
-
+#include <cstdio>
 #include <iostream>
 
 
@@ -35,32 +34,61 @@ float update_player_angle (float xCoordinate, float xPlayer,float yCoordinate, f
 	// std::cout << g.ship.angle << std::endl;
 }
 
-// void collision_detection (float shipXPosition, float shipYPosition, ) 
-// {
 
-// }
+void reset_game_stats () {
+	gl.player_health = 10;
+	gl.bullets_shot = 0;
+	gl.monsters_killed = 0;
+	gl.bullet_accuracy = 0;
+} 
+void game_over(Rect *r, int xres, int yres) {
 
-// void loadPlayerIcon() {
+	glColor3f(0.0f, 0.0f, 0.0f);
+
+	glBegin(GL_QUADS);
+
+	glVertex2i(0,0);
+	glVertex2i(0,yres);
+	glVertex2i(xres,yres);
+	glVertex2i(xres,0);
+
+	glEnd();
 
 
-// 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-// 	glGenTextures(1, &playerTexture);
-
-// 	glEnable(GL_TEXTURE_2D);
-// 	// glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-
-// 	glBindTexture(GL_TEXTURE_2D, playerTexture);
-
-
-// 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-// 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,img[1].width, img[1].height, 0,GL_RGB, GL_UNSIGNED_BYTE, img[1].data);	
+	gl.player_score = 0;
+    //centering the title screen
+    r->center = 30;
+    r->bot = yres / 2 + 120;
+    r->left = xres/2;
 	
-// }
+	// Overall Accuracy Calculation
+	float bullets_accuracy = 0.0f;
+	// if not shots fired accurcay is zero
+	if (gl.bullets_shot > 0.0) {
+		bullets_accuracy = (float)gl.monsters_killed / (float)gl.bullets_shot;
+	}
+
+
+	char monsters_killed[100];
+	char bullets_shot[100];
+	char bullets_accuracy_string[100];
+
+	sprintf(monsters_killed, "Monsters Killed: %d", gl.monsters_killed);
+	sprintf(bullets_shot, "Bullers Shot: %d", gl.bullets_shot);
+	sprintf(bullets_accuracy_string, "Bullet Accuracy: %f", bullets_accuracy);
+
+    ggprint16(r, 36, 0x00ff0000, "Wasted");
+
+    r->bot = yres / 2 + 30;
+    ggprint16(r, 36, 0xffffffff, "Press space to return to title screen");
+    ggprint12(r, 24, 0xffffffff, monsters_killed);
+    ggprint12(r, 24, 0xffffffff, bullets_shot);
+    ggprint12(r, 24, 0xffffffff, bullets_accuracy_string);
+
+    r->bot = yres / 2 - 30;
+   
+	
+}
 
 void handle_shot( int &lastShot) {
 
@@ -108,4 +136,5 @@ void handle_shot( int &lastShot) {
 		}
 
         ++g.nbullets;
+		gl.bullets_shot++;  
 }
