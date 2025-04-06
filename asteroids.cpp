@@ -1151,6 +1151,7 @@ else if (g.ship.pos[1] > (float)gl.yres) {
     if (g.nslimes == 0 && gl.current_level == 1) {
         initSlimes();
     }
+    update_medkit();
 	
 }
 
@@ -1444,6 +1445,7 @@ if (gl.game_started) {
         s = s->next;
     }
     r.bot = gl.yres - 100;
+    render_medkit();
     // Add slime count to UI
     //if (gl.current_level == 1) {
         ggprint8b(&r, 16, 0x00ffff00, "n slimes: %i", g.nslimes);

@@ -137,6 +137,21 @@ class Global {
             isParent = true;
         }
     };
+    class MedKit {
+    public:
+        Vec pos;           // Position
+        float radius;      // Collision radius
+        bool active;       // Whether the med kit is currently active
+        float glowIntensity; // For the glow animation (0.0-1.0)
+        float glowDirection;  // Whether the glow is increasing or decreasing
+    public:
+        MedKit() {
+            active = false;
+            radius = 15.0f;
+            glowIntensity = 0.5f;
+            glowDirection = 1.0f;
+        }
+    };
 
      // Will use for skeleton enemy --  Julio 
     /*class Skeleton {
@@ -157,6 +172,7 @@ class Global {
         int nbullets;
         Slime *slimeHead; //new
         int nslimes; //new
+        MedKit medkit;
         // struct timespec bulletTimer;
         struct timespec mouseThrustTimer;
         bool mouseThrustOn;
