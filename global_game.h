@@ -110,6 +110,8 @@ class Global {
     public:
         Vec pos;
         Vec vel;
+        float damage = 0.0f;
+        bool being_hit = false;
     };
     class Hound {
     public:

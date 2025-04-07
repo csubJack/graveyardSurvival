@@ -5,6 +5,7 @@
 #include "types.h"
 #include "global_game.h"
 #include "jcornejo.h"
+#include "djimenezgarc.h"
 
 #include <iostream>
 #include <cstdlib>
@@ -190,7 +191,7 @@ void buildSlimeFragment(Slime *ts, Slime *s)
 
 void initSlimes() 
 {
-    if (gl.current_level == 1) {
+    if (gl.current_level == 1 || gl.current_level == 3) {
         for (int i = 0; i < 5; i++) {
             Slime *s = new Slime;
             s->nverts = 8;
@@ -429,7 +430,7 @@ void level_two_render();
 extern void checking_level_transition();
 // removed from now it 
 //void init();
-extern void show_hat(); 
+extern void move_hat(); 
 extern void move_slimes();
 extern void checking_invincible_timer();
 //extern void show_hound();
@@ -447,7 +448,7 @@ int main()
     //checking_invincible_timer();
     gl.title_hat = 1;
     gl.main_hat = 0;
-    show_hat();
+    move_hat();
     //show_hound();
     //init(); show hat should replace this
 	srand(time(NULL));
@@ -590,7 +591,7 @@ void reset_game_animation() {
 void reset_title_animation() {
     // resetting the hat
     //init();
-    show_hat();
+    move_hat();
 }
 
 
@@ -867,7 +868,8 @@ int check_keys(XEvent *e)
 	return 0;
 }
 // keeping this for main screen
-void move_hat()
+void extern hat_taking_damage();
+void physics_hat()
 {
     //move hat
     int addgrav = 1;
@@ -896,11 +898,25 @@ void move_hat()
             + (hat.pos[1] - g.ship.pos[1]) * (hat.pos[1] - g.ship.pos[1])
             );
     float hat_radius = 100.0;
-    if (dist < hat_radius + gl.player_size){
+    if (dist < hat_radius + gl.player_size) {
         if (!gl.player_invincible) {
             gl.player_health -= 3;
             gl.player_invincible = 1;
             gl.invincible_timer = 3;
+
+        }
+    }
+    for (int i = 0; i < g.nbullets; i++) {
+        Bullet *b = &g.barr[i];
+        float dx = b->pos[0] - hat.pos[0];
+        float dy = b->pos[1] - hat.pos[1];
+        float dist = sqrt(dx*dx + dy*dy);
+        float bullet_radius = 10.0f;
+        if (dist < (hat_radius + bullet_radius)) {
+            //delete bullet
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
+            g.nbullets--;
+            hat_taking_damage();
 
         }
     }
@@ -1148,7 +1164,7 @@ else if (g.ship.pos[1] > (float)gl.yres) {
     }
 
     // If all slimes are destroyed, spawn a new wave
-    if (g.nslimes == 0 && gl.current_level == 1) {
+    if (g.nslimes == 0 && (gl.current_level == 1 || gl.current_level == 3)) {
         initSlimes();
     }
     update_medkit();
@@ -1281,7 +1297,7 @@ void title_render()
     glPopMatrix();
     }
          //glDisable(GL_TEXTURE_2D);
-         move_hat();
+         physics_hat();
      //    return;
     }
     //glDisable(GL_TEXTURE_2D);
@@ -1311,6 +1327,7 @@ if (gl.game_started) {
 	
 ///-----------------------------------------------
     float wid = 120.0f;
+    float scale =  1.0 - hat.damage;
 ////---------------------------------------------
 	r.bot = gl.yres - 20;
 	r.left = 10;
@@ -1327,11 +1344,11 @@ if (gl.game_started) {
     glColor3f(1.0, 1.0, 1.0);
     //glEnable(GL_TEXTURE_2D);
     //gl.main_hat = 1;
-    if (gl.player_score >= 1000)
+    if (gl.player_score >= 1000 && (!(gl.player_score >= 2000)))
         gl.main_hat = 1;
     else if (gl.player_score < 1000)
         gl.main_hat = 0;
-    if(gl.main_hat) {
+    if(gl.main_hat && gl.current_level == 2) {
         //render_hound();
         //show_hound();
         glPushMatrix();
@@ -1348,6 +1365,10 @@ if (gl.game_started) {
 
         //glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
    // }
+    if (hat.being_hit) {
+        glColor4f(1.0f, 1.0f - hat.damage, 1.0 - hat.damage, 1.0f);
+        glScalef(scale, scale, 1.0f);
+    }
     glBegin(GL_QUADS);
     if(g.ship.vel[0] > 0.0) {
         glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
@@ -1364,7 +1385,7 @@ if (gl.game_started) {
     glEnd();
     glPopMatrix();
     
-    move_hat();
+    physics_hat();
 }
 
 	

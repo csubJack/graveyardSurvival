@@ -86,6 +86,20 @@ void show_level_two_test()
         ggprint16(&r, 16, 0x00ffffff, "Level Two");
     }
 }
+void show_level_three() 
+{
+    render();
+    gl.current_level = 3;
+    Rect r;
+    r.center = 30;
+    r.bot = gl.yres / 2 + 120;
+    r.left = gl.xres/2;
+    if (gl.player_score < 2200)
+    {
+        ggprint16(&r, 16, 0x00ffffff, "Level three");
+    }
+
+}
 
 //---------------------
 // include time in here
@@ -104,7 +118,7 @@ void show_score()
 }
 void checking_level_transition()
 {
-    if (gl.player_score >= 1000) {
+    if (gl.player_score >= 1000 && (!(gl.player_score >= 2000))) {
         while (g.slimeHead) {
             Slime *s = g.slimeHead;
             g.slimeHead = g.slimeHead->next;
@@ -114,6 +128,9 @@ void checking_level_transition()
 
         show_level_two_test();
     }
+    else if (gl.player_score >= 2000) {
+        show_level_three();
+    }
 }
 
 void check_level_change_color()
@@ -122,6 +139,8 @@ void check_level_change_color()
         glClearColor(0.0, 0.0, 0.0, 0.0);
     else if (gl.current_level == 2)
         glClearColor(0.2, 0.2, 0.5, 1.0);
+    else if (gl.current_level == 3)
+        glClearColor(0.3, 0.4, 0.7, 0.4);
 }
 //------------------------------------------------------------------
 /*void rendering_background() 
@@ -135,7 +154,24 @@ void check_level_change_color()
 
 */
 //-------------------------------------------------------------------
-void show_hat()
+void hat_taking_damage()
+{
+    // going up to 1.0 as in fully damaged
+   if (!hat.being_hit) {
+       hat.being_hit = true;
+       hat.damage = 0.0f;
+   }
+   if (hat.being_hit) {
+       hat.damage += 0.2f;
+       gl.player_score += 250;
+       if (hat.damage >= 1.0f) {
+           hat.being_hit = false;
+           hat.damage = 0.0f;
+           gl.main_hat = 0;
+       }
+   }
+}
+void move_hat()
 {
     // need this for main hat's triple bounce pattern
     static int bounce_count = 1;
@@ -153,12 +189,6 @@ void show_hat()
             MakeVector(x_speed+bounce_count, y_speed+bounce_count, 0.0, hat.vel);
             bounce_count++;
         }
-        /*if (bounce_count % 3 == 2)
-            MakeVector(30.0, 50.0, 0.0, hat.vel);
-        else 
-            MakeVector(2.0, 5.0, 0.0, hat.vel);
-        bounce_count++;
-        */
     }
 }
 void move_slimes()
