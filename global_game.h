@@ -154,7 +154,29 @@ class Global {
             glowDirection = 1.0f;
         }
     };
-
+    //---------------------------------------------
+    //background materials
+    typedef enum {
+        TOMBSTONE_NORMAL,
+        TOMBSTONE_CHUNKY,
+        TOMBSTONE_THIN,
+        TOMBSTONE_SHORTWIDE
+    } TombstoneType;
+    typedef struct {
+        float x, y;
+        TombstoneType type;
+    } Tombstone;
+    // other descriptive terms for these trees, gnarly tree, dead tree, apple tree
+    typedef enum {
+        WITCH_TREE,
+        GRAVEYARD_TREE,
+        LEVEL_THREE_TREE
+    } TreeType;
+    typedef struct {
+        float x, y;
+        TreeType type;
+    }Tree;
+    //---------------------------------------------
      // Will use for skeleton enemy --  Julio 
     /*class Skeleton {
         public:

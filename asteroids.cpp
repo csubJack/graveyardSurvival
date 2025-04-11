@@ -433,6 +433,7 @@ extern void checking_level_transition();
 extern void move_hat(); 
 extern void move_slimes();
 extern void checking_invincible_timer();
+extern void rendering_background();
 //extern void show_hound();
 //void show_hound();
 // animation rest
@@ -490,11 +491,11 @@ int main()
         }
         if (gl.game_started) {
             checking_invincible_timer();
+            //rendering_background();
             render();
             show_score();
             move_slimes();
             checking_level_transition();
-            //gl.player_score += 1;
         }
         if (gl.player_health <= 0 && gl.game_started) {
             Rect r; 
@@ -951,30 +952,29 @@ void move_hound()
 
 void physics()
 {
-
 	//Update ship position
 	g.ship.pos[0] += g.ship.vel[0];
 	g.ship.pos[1] += g.ship.vel[1];
 
     
     // Add this new logic:
-if (g.ship.pos[0] < 0.0) {
-    g.ship.pos[0] = 0.0; // Stop at the left edge
-    g.ship.vel[0] = 0.0; // Set velocity to zero
-}
-else if (g.ship.pos[0] > (float)gl.xres) {
-    g.ship.pos[0] = (float)gl.xres; // Stop at the right edge
-    g.ship.vel[0] = 0.0; // Set velocity to zero
-}
+    if (g.ship.pos[0] < 0.0) {
+        g.ship.pos[0] = 0.0; // Stop at the left edge
+        g.ship.vel[0] = 0.0; // Set velocity to zero
+    }
+    else if (g.ship.pos[0] > (float)gl.xres) {
+        g.ship.pos[0] = (float)gl.xres; // Stop at the right edge
+        g.ship.vel[0] = 0.0; // Set velocity to zero
+    }
 
-if (g.ship.pos[1] < 0.0) {
-    g.ship.pos[1] = 0.0; // Stop at the bottom edge
-    g.ship.vel[1] = 0.0; // Set velocity to zero
-}
-else if (g.ship.pos[1] > (float)gl.yres) {
-    g.ship.pos[1] = (float)gl.yres; // Stop at the top edge
-    g.ship.vel[1] = 0.0; // Set velocity to zero
-}
+    if (g.ship.pos[1] < 0.0) {
+        g.ship.pos[1] = 0.0; // Stop at the bottom edge
+        g.ship.vel[1] = 0.0; // Set velocity to zero
+    }
+    else if (g.ship.pos[1] > (float)gl.yres) {
+        g.ship.pos[1] = (float)gl.yres; // Stop at the top edge
+        g.ship.vel[1] = 0.0; // Set velocity to zero
+    }
 
 	//
 	//Update bullet positions
@@ -1314,7 +1314,7 @@ void render()
 	Rect stats;
 	glClear(GL_COLOR_BUFFER_BIT);
     check_level_change_color();
-
+    rendering_background();
 if (gl.game_started) {
 	stats.bot = 0;
 	stats.left = gl.xres-140;
