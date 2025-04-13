@@ -39,12 +39,14 @@ class Global {
         float bullet_accuracy;
         int current_level;
         // end Player Metrics 
-
+        
+        int grass;
         int hat_silhouette;
         bool game_started;
         GLuint witch_texture;
         GLuint hat_texture;
         GLuint hat_silhouette_texture;
+        GLuint grass_texture;
         GLuint hound_texture;
         GLuint hound_trans_texture;
         float mouseXCoordinate;
@@ -64,6 +66,9 @@ class Global {
             character_screen = 0;
             current_level = 1;
             game_started = false;
+            grass = 1;
+            //-----------------------
+            //player stats
             player_size = 10.0;
             player_health = 100;
             player_invincible = 0;

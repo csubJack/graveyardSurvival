@@ -96,7 +96,21 @@ void show_level_three()
     r.left = gl.xres/2;
     if (gl.player_score < 2200)
     {
-        ggprint16(&r, 16, 0x00ffffff, "Level three");
+        ggprint16(&r, 16, 0x00ffffff, "Level Three");
+    }
+
+}
+void show_level_four()
+{
+    render();
+    gl.current_level = 4;
+    Rect r;
+    r.center = 30;
+    r.bot = gl.yres / 2 + 120;
+    r.left = gl.xres/2;
+    if (gl.player_score < 3200)
+    {
+        ggprint16(&r, 16, 0x00ffffff, "Level Four");
     }
 
 }
@@ -128,19 +142,27 @@ void checking_level_transition()
 
         show_level_two_test();
     }
-    else if (gl.player_score >= 2000) {
+    else if (gl.player_score >= 2000 && (!(gl.player_score >= 3000))) {
         show_level_three();
+    }
+    else if (gl.player_score >= 3000) {
+        show_level_four();
     }
 }
 
 void check_level_change_color()
 {
-    if (gl.current_level == 1) 
-        glClearColor(0.0, 0.0, 0.0, 0.0);
+    // changing this to white , all 0's before,
+    // three 1's gives a purple look, looks nice actually
+    if (gl.current_level == 1) //nevermind it's always red now
+       glClearColor(0.0, 0.0, 0.0, 0.0);
     else if (gl.current_level == 2)
         glClearColor(0.2, 0.2, 0.5, 1.0);
     else if (gl.current_level == 3)
         glClearColor(0.3, 0.4, 0.7, 0.4);
+    else if (gl.current_level == 4) {
+        glClearColor(0.5, 0.5, 0.7, 0.6);
+    }
 }
 //------------------------------------------------------------------
 Tombstone tombstones[] = {
@@ -160,10 +182,19 @@ Tombstone tombstones[] = {
     {560, 0, TOMBSTONE_SHORTWIDE},
 };
 Tree witch[] = {
-    {325, 225, WITCH_TREE},
+    {100, 0, WITCH_TREE},
+    {100, 110, WITCH_TREE},
+    {50, 400, WITCH_TREE},
+    {150, 250, WITCH_TREE},
+    {220, 600, WITCH_TREE},
+    {500, 0, WITCH_TREE},
+    {350, 110, WITCH_TREE},
+    {600, 310, WITCH_TREE},
+    {450, 210, WITCH_TREE},
+    {300, 300, WITCH_TREE},
 };
-int numTombstones = sizeof(tombstones) / sizeof(Tombstone);
-int numWitchItems = sizeof(witch) / sizeof(Tree);
+int num_tombstones = sizeof(tombstones) / sizeof(Tombstone);
+int num_witch_items = sizeof(witch) / sizeof(Tree);
 
 void get_tombstone_size(TombstoneType type, float *width, float *height)
 {
@@ -195,8 +226,8 @@ void get_tree_size(TreeType type, float *width, float *height)
 {
     switch(type) {
         case WITCH_TREE:
-            *width = 200;
-            *height = 200;
+            *width = 100;
+            *height = 100;
             break;
         default:
             *width = 100;
@@ -206,7 +237,9 @@ void get_tree_size(TreeType type, float *width, float *height)
 }
 void draw_tombstone(float x, float y, float width, float height)
 {
+    glDisable(GL_TEXTURE_2D);
     // Base rectangle of the tombstone
+    // gray is all 0.5, switching to 4f
     glColor3f(0.5f, 0.5f, 0.5f); // gray
     glBegin(GL_QUADS);
         glVertex2f(x, y);
@@ -225,21 +258,12 @@ void draw_tombstone(float x, float y, float width, float height)
             glVertex2f(x + width / 2 + dx, y + height * 0.8f + dy);
         }
     glEnd();
+    glEnable(GL_TEXTURE_2D);
 }
 void draw_trees(float x, float y, float width, float height)
 {
-    // base polygon to look like  roots, brown
-    //glColor3f(0.2f, 0.1f, 0.0f);
-    /*glBegin(GL_TRIANGLE_FAN);
-        glVertex2f(x, y); // trunk base center
-        glVertex2f(x - width * 0.8f, y - height * 0.2f);
-        glVertex2f(x - width * 0.4f, y - height * 0.3f);
-        glVertex2f(x, y - height * 0.35f); // center bottom
-        glVertex2f(x + width * 0.4f, y - height * 0.3f);
-        glVertex2f(x + width * 0.8f, y - height * 0.2f);
-    glEnd(); */
-    
-    // then trunk, with a darker brown
+    glDisable(GL_TEXTURE_2D);
+    // then trunk dark brown
     glColor3f(0.15f, 0.05f, 0.0f);
     glBegin(GL_POLYGON);
         glVertex2f(x - width * 0.2f, y);
@@ -247,7 +271,7 @@ void draw_trees(float x, float y, float width, float height)
         glVertex2f(x + width * 0.1f, y + height * 0.5f);
         glVertex2f(x - width * 0.1f, y + height * 0.5f);
     glEnd();
-    // finally leaves, dark green
+    // leaves, dark green
     glColor3f(0.1f, 0.2f, 0.1f); 
     glBegin(GL_TRIANGLE_FAN);
         glVertex2f(x, y + height * 0.7f); // top center
@@ -259,11 +283,78 @@ void draw_trees(float x, float y, float width, float height)
             glVertex2f(px, py);
         }
     glEnd();
+    glEnable(GL_TEXTURE_2D);
+}
+void draw_witch_house(float x, float y, float width, float height)
+{
+    glDisable(GL_TEXTURE_2D);
+
+    // Log Cabin Body
+    glColor3f(0.3f, 0.0f, 0.4f); 
+    glBegin(GL_QUADS);
+        glVertex2f(x - width / 2, y);
+        glVertex2f(x + width / 2, y);
+        glVertex2f(x + width / 2, y + height);
+        glVertex2f(x - width / 2, y + height);
+    glEnd();
+
+    // Roof
+    glColor3f(0.4f, 0.1f, 0.3f);
+    glBegin(GL_TRIANGLES);
+        glVertex2f(x, y + height + height * 0.5f);         // peak
+        glVertex2f(x - width * 0.6f, y + height); // left
+        glVertex2f(x + width * 0.6f, y + height); // right
+    glEnd();
+
+    // Door - center
+    float doorWidth = width * 0.25f;
+    float doorHeight = height * 0.4f;
+    glColor3f(0.7f, 0.5f, 0.9f);
+    glBegin(GL_QUADS);
+        glVertex2f(x - doorWidth / 2, y);
+        glVertex2f(x + doorWidth / 2, y);
+        glVertex2f(x + doorWidth / 2, y + doorHeight);
+        glVertex2f(x - doorWidth / 2, y + doorHeight);
+    glEnd();
+
+    // Window - small square on left
+    float windowSize = width * 0.2f;
+    glColor3f(0.6f, 0.4f, 0.8f); 
+    glBegin(GL_QUADS);
+        glVertex2f(x - width * 0.35f, y + height * 0.5f);
+        glVertex2f(x - width * 0.35f + windowSize, y + height * 0.5f);
+        glVertex2f(x - width * 0.35f + windowSize, y + height * 0.5f + windowSize);
+        glVertex2f(x - width * 0.35f, y + height * 0.5f + windowSize);
+    glEnd();
+    if (gl.current_level == 3) {
+        float roadWidth = 20.0f;
+        float startY = y;
+        float segments = 10;
+        float curveAmplitude = 30.0f;
+        float segmentHeight = 40.0f;
+
+        glColor3f(0.2f, 0.2f, 0.2f); // dark grey road
+
+        glBegin(GL_TRIANGLE_STRIP);
+        for (int i = 0; i <= segments; ++i) {
+            //float t = (float)i / segments;
+            float posY = startY - i * segmentHeight;
+            float offsetX = sinf(i * 0.6f) * curveAmplitude;
+
+            // left edge of road
+            glVertex2f(x + offsetX - roadWidth / 2, posY);
+            // right edge of road
+            glVertex2f(x + offsetX + roadWidth / 2, posY);
+        }
+    glEnd();
+    }
+
+    glEnable(GL_TEXTURE_2D);
 }
 void tombstone_physics() 
 {
     // how the player interacts with all tombstones, prevents them from going through
-    for (int i = 0; i < numTombstones; i++) {
+    for (int i = 0; i < num_tombstones; i++) {
         float w, h;
         get_tombstone_size(tombstones[i].type, &w, &h);
         Tombstone *tomb_pos = &tombstones[i];
@@ -307,31 +398,89 @@ void tombstone_physics()
     }
     // how slimes react with tombstones
 }
+void witch_forest_physics()
+{
+    for (int i = 0; i < num_witch_items; i++) {
+         float w, h;
+        get_tree_size(witch[i].type, &w, &h);
+        Tree *tree_pos = &witch[i];
+        //-------------- Trunk collision-----------------------------------//
+        // To stop movement at the base, want the leaves to slow down
+        // player not stop them
+        float trunk_width = w * 0.4f;
+        float trunk_height = h * 0.5f;
+        float tree_x = tree_pos->x - trunk_width / 2;
+        float tree_y = tree_pos->y;
+
+        if (g.ship.pos[0] + gl.player_size > tree_x
+                && g.ship.pos[0] - gl.player_size < tree_x + trunk_width
+                && g.ship.pos[1] + gl.player_size > tree_y
+                && g.ship.pos[1] - gl.player_size < tree_y + trunk_height) {
+
+            // stop movement
+            g.ship.vel[0] = 0;
+            g.ship.vel[1] = 0;
+
+            float d0 = g.ship.pos[0] - tree_pos->x;
+            float d1 = g.ship.pos[1] - tree_pos->y;
+            float dist = sqrt(d0 * d0 + d1 * d1);
+            if (dist > 0) {
+                if (g.ship.pos[0] + gl.player_size > tree_x
+                        && g.ship.pos[0] < tree_x) {
+                    g.ship.pos[0] = tree_x - gl.player_size;
+                }
+                else if (g.ship.pos[0] - gl.player_size < tree_x + trunk_width
+                        && g.ship.pos[0] > tree_x + trunk_width) {
+                    g.ship.pos[0] = tree_x + trunk_width + gl.player_size;
+                }
+                else if (g.ship.pos[1] + gl.player_size > tree_y
+                        && g.ship.pos[1] < tree_y) {
+                    g.ship.pos[1] = tree_y - gl.player_size;
+                }
+                else if (g.ship.pos[1] - gl.player_size < tree_y + trunk_height
+                        && g.ship.pos[1] > tree_y + trunk_height) {
+                    g.ship.pos[1] = tree_y + trunk_height + gl.player_size;
+                }
+            }
+        }
+        //-------------------------Leaves Collision------------------------//
+        float leaves_width = w * 1.2f;
+        float leaves_height = h * 0.5;
+        float leaves_x = tree_pos->x - leaves_width / 2;
+        float leaves_y = tree_pos->y + trunk_height;
+        if (g.ship.pos[0] + gl.player_size > leaves_x
+                && g.ship.pos[0] - gl.player_size < leaves_x + leaves_width
+                && g.ship.pos[1] + gl.player_size > leaves_y
+                && g.ship.pos[1] - gl.player_size < leaves_y + leaves_height) {
+            g.ship.vel[0] *= 0.5f;
+            g.ship.vel[1] *= 0.5f;
+        }
+    }
+}
 void rendering_background() 
 {
-    //printf("rendering background...\n");
     if (gl.current_level == 1) {
-        //printf("passed if check\n");
-        //testing out how they all looki
-        for (int i = 0; i < numTombstones; i ++) {
+        for (int i = 0; i < num_tombstones; i ++) {
             float w,h;
             get_tombstone_size(tombstones[i].type, &w,&h);
             draw_tombstone(tombstones[i].x, tombstones[i].y, w, h);
-            //tombstone_physics();
         }
-        tombstone_physics();
     }
     else if (gl.current_level == 2) {
-        for (int i = 0; i < numWitchItems; i ++) {
+        for (int i = 0; i < num_witch_items; i ++) {
             float w,h;
             get_tree_size(witch[i].type, &w,&h);
             draw_trees(witch[i].x, witch[i].y, w, h);
         }
     }
+    else if (gl.current_level == 3) {
+        draw_witch_house(310,400, 50, 50);
+
+    }
   /*   a series of while loops could work
      level 1 grave stones, tombs, and sarcaphagi
-     level 2 witch's house
-     level 3
+     level 2 witch's trees
+     level 3 Witch's House
     */
 }
 
@@ -355,22 +504,9 @@ void hat_taking_damage()
 }
 void move_hat()
 {
-    // need this for main hat's triple bounce pattern
-    static int bounce_count = 1;
-    int x_speed = 2;
-    int y_speed = 5;
-
-    if (gl.title_screen) {
+    if (gl.current_level == 1) {
         MakeVector(-150.0, 180.0, 0.0, hat.pos);
         MakeVector(6.0, 15.0, 0.0, hat.vel);
-        bounce_count = 1;
-    } else {
-        MakeVector(-150.0, 180.0, 0.0, hat.pos);
-        while (bounce_count < 20)
-        {
-            MakeVector(x_speed+bounce_count, y_speed+bounce_count, 0.0, hat.vel);
-            bounce_count++;
-        }
     }
 }
 void move_slimes()

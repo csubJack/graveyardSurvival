@@ -114,11 +114,12 @@ public:
     }
 };
 
-Image img[4] = {
+Image img[5] = {
 "./images/hat.png",
 "./images/standing-still.png",
 "./images/houndDog2.png",
-"./images/pixel_skeleton.png"
+"./images/pixel_skeleton.png",
+"./images/grass.png"
 };
 
 
@@ -494,7 +495,7 @@ int main()
             //rendering_background();
             render();
             show_score();
-            move_slimes();
+            //move_slimes();
             checking_level_transition();
         }
         if (gl.player_health <= 0 && gl.game_started) {
@@ -584,7 +585,7 @@ void reset_game_animation() {
     }
     g.nslimes = 0;
     initSlimes();
-    
+    move_hat(); 
     
 }
 
@@ -662,6 +663,17 @@ void init_opengl(void)
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
         GL_RGB, GL_UNSIGNED_BYTE, img[2].data);
+
+
+    //----------------------------------------------------------------------
+    // grass
+    glBindTexture(GL_TEXTURE_2D, gl.grass_texture);
+   
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, img[4].width, img[4].height,
+                                    0, GL_RGB, GL_UNSIGNED_BYTE, img[4].data);
+
     //trying to implement the transparency
 //    glBindTexture(GL_TEXTURE_2D, gl.hound_trans_texture);
 	//
@@ -859,7 +871,10 @@ int check_keys(XEvent *e)
         case XK_1:
             gl.player_score += 1000;
             break;
-		case XK_Down:
+        case XK_2:
+            gl.grass ^= 1;
+		    break;
+        case XK_Down:
 			break;
 		case XK_equal:
 			break;
@@ -874,26 +889,77 @@ void physics_hat()
 {
     //move hat
     int addgrav = 1;
+    static float speed = 5.0f;
+    static float hat_active = 0;
     //Update position
     hat.pos[0] += hat.vel[0];
     hat.pos[1] += hat.vel[1];
-    //Check for collision with window edges
-    if ((hat.pos[0] < -140.0 && hat.vel[0] < 0.0) ||
-        (hat.pos[0] >= (float)gl.xres+140.0 &&
-        hat.vel[0] > 0.0))
-    {
-        hat.vel[0] = -hat.vel[0];
-        addgrav = 0;
+    if (gl.current_level == 1) {
+        //Check for collision with window edges
+        if ((hat.pos[0] < -140.0 && hat.vel[0] < 0.0) ||
+            (hat.pos[0] >= (float)gl.xres+140.0 &&
+            hat.vel[0] > 0.0))
+        {   
+            hat.vel[0] = -hat.vel[0];
+            addgrav = 0;
+        }
+        //  changing 150 to 0
+        if ((hat.pos[1] < 100.0 && hat.vel[1] < 0.0) ||
+            (hat.pos[1] >= (float)gl.yres && hat.vel[1] > 0.0)) {
+            hat.vel[1] = -hat.vel[1];
+            addgrav = 0;
+        }
+        //Gravity?
+        if (addgrav)
+            hat.vel[1] -= 0.75;
     }
-    //  changing 150 to 0
-    if ((hat.pos[1] < 100.0 && hat.vel[1] < 0.0) ||
-        (hat.pos[1] >= (float)gl.yres && hat.vel[1] > 0.0)) {
-        hat.vel[1] = -hat.vel[1];
-        addgrav = 0;
+    //if (gl.current_level == 2) {
+    if (gl.current_level == 2) {
+        //MakeVector(-150.0, 180.0, 0.0, hat.pos);
+        if (!hat_active ||
+        hat.pos[0] < -100 || hat.pos[0] > gl.xres + 100 ||
+        hat.pos[1] < -100 || hat.pos[1] > gl.yres + 100) {
+            // New position pick a corner
+            int corner = rand() % 4;
+            float X, Y;
+            switch (corner) {
+                case 0: // top left
+                    X = -100.0f;
+                    Y = gl.yres + 100.0f;
+                    break;
+                case 1: // top right
+                    X = gl.xres + 100.0f;
+                    Y = gl.yres + 100.0f;
+                    break;
+                case 2: // bottom left
+                    X = -100.0f;
+                    Y = 100.0f;
+                    break;
+                case 3: // bottom right
+                    X = gl.xres + 100.0f;
+                    Y = -100.0f;
+                    break;
+            }
+            // this was a bit unfair for the players
+            //float X = -100 + rand() % (gl.xres + 200);
+            //float Y = gl.yres + 100; // Top offscreen
+
+            MakeVector(X, Y, 0.0, hat.pos);
+
+            // Calculate direction to player
+            float dx = g.ship.pos[0] - hat.pos[0];
+            float dy = g.ship.pos[1] - hat.pos[1];
+            float dist = sqrt(dx * dx + dy * dy);
+            if (dist != 0) {
+                dx /= dist;
+                dy /= dist;
+            }
+            MakeVector(dx * speed, dy * speed, 0.0, hat.vel);
+            hat_active = 1;
+
+        }
     }
-    //Gravity?
-    if (addgrav)
-        hat.vel[1] -= 0.75;
+
     float dist = sqrt (
             (hat.pos[0] - g.ship.pos[0]) * (hat.pos[0] - g.ship.pos[0])
             + (hat.pos[1] - g.ship.pos[1]) * (hat.pos[1] - g.ship.pos[1])
@@ -921,6 +987,7 @@ void physics_hat()
 
         }
     }
+   // }
 }
 
 void move_hound()
@@ -950,6 +1017,8 @@ void move_hound()
 }
 
 
+extern void tombstone_physics();
+extern void witch_forest_physics();
 void physics()
 {
 	//Update ship position
@@ -1164,12 +1233,21 @@ void physics()
     }
 
     // If all slimes are destroyed, spawn a new wave
-    if (g.nslimes == 0 && (gl.current_level == 1 || gl.current_level == 3)) {
+    if (g.nslimes == 0 && (gl.current_level == 1 || gl.current_level == 4)) {
         initSlimes();
     }
     update_medkit();
-	
+	if (gl.current_level == 1)
+        tombstone_physics();
+    if (gl.current_level == 1 || gl.current_level == 3)
+        move_slimes();
+    if (gl.current_level == 2)
+        witch_forest_physics();
+//    if (gl.current_level == 1 || gl.current_level == 2)
+//        move_hat();
+    physics_hat();
 }
+
 
 // added int xres and int yres so as to not cluter anything up here
 //  and instead did all the work in another file
@@ -1297,25 +1375,52 @@ void title_render()
     glPopMatrix();
     }
          //glDisable(GL_TEXTURE_2D);
-         physics_hat();
+         //physics_hat();
      //    return;
     }
     //glDisable(GL_TEXTURE_2D);
 }
 
-
-
-
 extern void check_level_change_color();
+//extern void tombstone_physics();
 void render()
 {
         
 	Rect r;
 	Rect stats;
 	glClear(GL_COLOR_BUFFER_BIT);
+   // check_level_change_color();
+    //rendering_background();
+/*    if (gl.grass) {
+        
+        glColor4f(1.0f, 1.0f, 1.0f, 0.0f);
+        glBindTexture(GL_TEXTURE_2D, gl.grass_texture);
+        glBegin(GL_QUADS);
+            glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+            glTexCoord2f(0.0f, 0.0f); glVertex2i(0, gl.yres);
+            glTexCoord2f(1.0f, 0.0f); glVertex2i(gl.xres, gl.yres);
+            glTexCoord2f(1.0f, 1.0f); glVertex2i(gl.xres, 0);
+        glEnd();
+        
+    } */
+   // check_level_change_color();
+    //rendering_background();
+if (gl.game_started) {
+    if (gl.grass) {
+
+        glColor4f(1.0f, 1.0f, 1.0f, 0.0f);
+        glBindTexture(GL_TEXTURE_2D, gl.grass_texture);
+        glBegin(GL_QUADS);
+            glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+            glTexCoord2f(0.0f, 0.0f); glVertex2i(0, gl.yres);
+            glTexCoord2f(1.0f, 0.0f); glVertex2i(gl.xres, gl.yres);
+            glTexCoord2f(1.0f, 1.0f); glVertex2i(gl.xres, 0);
+        glEnd();
+        //glDisable(GL_TEXTURE_2D);
+    }
+    //glEnable(GL_TEXTURE_2D);
     check_level_change_color();
     rendering_background();
-if (gl.game_started) {
 	stats.bot = 0;
 	stats.left = gl.xres-140;
 	stats.center = 0;
@@ -1385,7 +1490,7 @@ if (gl.game_started) {
     glEnd();
     glPopMatrix();
     
-    physics_hat();
+    //physics_hat();
 }
 
 	
