@@ -1245,7 +1245,8 @@ void physics()
         witch_forest_physics();
 //    if (gl.current_level == 1 || gl.current_level == 2)
 //        move_hat();
-    physics_hat();
+    if ((!gl.game_started)||(gl.current_level == 2))
+        physics_hat();
 }
 
 
