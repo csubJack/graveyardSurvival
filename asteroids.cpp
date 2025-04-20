@@ -501,6 +501,7 @@ int main()
         if (gl.player_health <= 0 && gl.game_started) {
             Rect r; 
             gl.game_over_screen = 1;
+            integrateBossSystem();
             gl.current_level = 1;
             game_over(&r, gl.xres, gl.yres);
 
@@ -585,6 +586,7 @@ void reset_game_animation() {
     }
     g.nslimes = 0;
     initSlimes();
+    integrateBossSystem();
     move_hat(); 
     
 }
@@ -687,6 +689,7 @@ void init_opengl(void)
 //	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
 //											GL_RGBA, GL_UNSIGNED_BYTE, ftData);
 //	free(ftData);
+    integrateBossSystem();
 }
 // only for witch lone movement
 //void init() 
@@ -1247,6 +1250,8 @@ void physics()
 //        move_hat();
     if ((!gl.game_started)||(gl.current_level == 2))
         physics_hat();
+
+    updateSlimeBoss();
 }
 
 
@@ -1262,8 +1267,8 @@ extern void levelText(Rect *r);
 //extern void show_score();
 
 
-void draw_ship() 
-{
+void draw_ship() { 
+
     glColor3fv(g.ship.color);
     glPushMatrix();
     glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
@@ -1493,7 +1498,8 @@ if (gl.game_started) {
     
     //physics_hat();
 }
-
+    
+    renderSlimeBoss();
 	
 	//-------------------------------------------------------------------------
 	//Draw the bullets

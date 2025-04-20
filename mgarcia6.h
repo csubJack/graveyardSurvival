@@ -12,5 +12,14 @@ void spawn_medkit();
 void check_medkit_collision();
 void update_medkit();
 void render_medkit();
+// Slime boss functions
+void initSlimeBoss();
+void updateSlimeBoss();
+void renderSlimeBoss();
+void renderAcidPools();
+void integrateBossSystem();
+bool isSlimeBossActive();
+void checkSlimeBossSpawn();
+void resetSlimeBoss();
 
 #endif
