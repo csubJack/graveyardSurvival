@@ -351,6 +351,78 @@ void draw_witch_house(float x, float y, float width, float height)
 
     glEnable(GL_TEXTURE_2D);
 }
+void tombstone_physics_on_slimes(Slime *s)
+{
+    for (int i = 0; i < num_tombstones; i ++) {
+        float w, h;
+        get_tombstone_size(tombstones[i].type, &w, &h);
+        Tombstone *tomb_pos = &tombstones[i];
+       // option 1 
+       /* if (s->pos[0] + s->radius > tomb_pos->x &&
+            s->pos[0] - s->radius < tomb_pos->x + w &&
+            s->pos[1] + s->radius > tomb_pos->y &&
+            s->pos[1] - s->radius < tomb_pos->y + h) {
+            
+            float dx = s->pos[0] - (tomb_pos->x + w / 4.0);
+            float dy = s->pos[1] - (tomb_pos->y + h / 4.0);
+            float overlap_x = (w / 2.0 + s->radius) + fabs(dx); 
+            float overlap_y = (h / 2.0 + s->radius) - fabs(dy);
+            // x first
+            if (overlap_x < overlap_y) {
+                if (dx > 0)
+                    s->pos[0] += overlap_x;
+                else
+                    s->pos[0] -= overlap_x;
+                s->vel[0] = 0;
+            } else {
+                // otherwise y
+                if (dy > 0)
+                    s->pos[1] += overlap_y;
+                else
+                    s->pos[1] -= overlap_y;
+                
+                s->vel[1] = 0;
+            }
+
+        }
+        */
+        //option 2
+        float slime_left   = s->pos[0] - s->radius;
+        float slime_right  = s->pos[0] + s->radius;
+        float slime_top    = s->pos[1] + s->radius;
+        float slime_bottom = s->pos[1] - s->radius;
+
+        float tomb_left   = tomb_pos->x;
+        float tomb_right  = tomb_pos->x + w;
+        float tomb_top    = tomb_pos->y + h;
+        float tomb_bottom = tomb_pos->y;
+
+        // Checking collision
+        if (slime_right > tomb_left && slime_left < tomb_right && slime_top > tomb_bottom && slime_bottom < tomb_top) {
+            // Find the overlap in both axes
+            float overlap_x = fmin(slime_right, tomb_right) - fmax(slime_left, tomb_left);
+            float overlap_y = fmin(slime_top, tomb_top) - fmax(slime_bottom, tomb_bottom);
+
+            // Resolve in the direction of least overlap
+            if (overlap_x < overlap_y) {
+                if (s->pos[0] < tomb_pos->x) {
+                    s->pos[0] -= overlap_x;
+                } else {
+                    s->pos[0] += overlap_x;
+                }
+                s->vel[0] = 0;
+            } else {
+                if (s->pos[1] < tomb_pos->y) {
+                    s->pos[1] -= overlap_y;
+                } else {
+                    s->pos[1] += overlap_y;
+                }
+                s->vel[1] = 0;
+            }
+        }
+    }
+    //
+}
 void tombstone_physics() 
 {
     // how the player interacts with all tombstones, prevents them from going through
@@ -369,8 +441,8 @@ void tombstone_physics()
 
             float d0 = g.ship.pos[0] - tomb_pos->x;
             float d1 = g.ship.pos[1] - tomb_pos->y;
-            float dist = sqrt(d0 * d0 + d1 * d1);
-            if (dist > 0) {
+            float distance_between_ship_tomb = sqrt(d0 * d0 + d1 * d1);
+            if (distance_between_ship_tomb > 0) {
                 // Left side of tombstone (Player-tombstone collision)
                 if (g.ship.pos[0] + gl.player_size > tomb_pos->x
                         && g.ship.pos[0] < tomb_pos->x) {
@@ -394,9 +466,8 @@ void tombstone_physics()
             }
             //break;
         }
-
+        //------------- How Slimes React with Tombstones---------//
     }
-    // how slimes react with tombstones
 }
 void witch_forest_physics()
 {

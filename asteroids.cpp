@@ -1031,7 +1031,7 @@ void move_hound()
 
 }
 
-
+extern void tombstone_physics_on_slimes(Slime *s);
 extern void tombstone_physics();
 extern void witch_forest_physics();
 void physics()
@@ -1270,6 +1270,10 @@ void physics()
                     s->vel[1] -= (d1/dist) * 3.0;
                 }
             }
+        }
+        // collision with tombstones
+        if (s != NULL) {
+            tombstone_physics_on_slimes(s);
         }
 
         if (s != NULL) {
