@@ -193,7 +193,7 @@ void buildSlimeFragment(Slime *ts, Slime *s)
 void initSlimes() 
 {
     if (gl.current_level == 1 || gl.current_level == 3) {
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 2; i++) { // changed to zerof to remove slimes for movement testing
             Slime *s = new Slime;
             s->nverts = 8;
             s->radius = 30.0 + rnd() * 40.0; // size
@@ -275,6 +275,8 @@ void renderPLayerIcon(float playerX, float playerY, float playerSize, float play
 
 	glRotatef(playerAngle, 0, 0, 1);
 
+    // glTranslatef(0.0f, -playerSize /2, 0.0f);
+
 	glBindTexture(GL_TEXTURE_2D, playerTexture);
 
 	glBegin(GL_QUADS);
@@ -284,7 +286,8 @@ void renderPLayerIcon(float playerX, float playerY, float playerSize, float play
 	    glTexCoord2f(1.0f, 1.0f); glVertex2i( playerSize / 2,-playerSize / 2);
 	glEnd();
 
-	glPopMatrix();
+	glPopMatrix();    
+
 }
 
 //X Windows variables
@@ -426,6 +429,7 @@ void physics();
 void render();
 void title_render();
 void game_over(Rect *r, float xres, float yres);
+void render_pause_screen(Rect *r);
 extern void show_score();
 void level_two_render();
 extern void checking_level_transition();
@@ -468,6 +472,9 @@ int main()
 			check_mouse(&e);
 			done = check_keys(&e);
 		}
+
+        
+
 		clock_gettime(CLOCK_REALTIME, &timeCurrent);
 		timeSpan = timeDiff(&timeStart, &timeCurrent);
 		timeCopy(&timeStart, &timeCurrent);
@@ -491,6 +498,11 @@ int main()
             previous_game_state = gl.game_started;
         }
         if (gl.game_started) {
+            // while (gl.game_paused == true) {
+            //     Rect r;
+            //     render();
+            //     render_pause_screen(&r); 
+            // }
             checking_invincible_timer();
             //rendering_background();
             render();
@@ -733,8 +745,8 @@ void check_mouse(XEvent *e)
 	// Fires if mouse moves, keeps player looking away from mouse
 	// TODO: ADD EXTRA MODE SO PLAYER IS FACING MOUSE
 	if (e->type == MotionNotify) {
-		g.ship.angle = update_player_angle(e->xmotion.x,
-                g.ship.pos[0], e->xmotion.y, g.ship.pos[1]);
+		// g.ship.angle = update_player_angle(e->xmotion.x,
+        //         g.ship.pos[0], e->xmotion.y, g.ship.pos[1]);
 	}
 
 	if (e->type == ButtonRelease) {
@@ -1087,27 +1099,57 @@ void physics()
 	//---------------------------------------------------
 	//check keys pressed now
     //current g.ship.angle, changing that gl.witch.angle and so on
-	if (gl.keys[XK_Left]) {
+	if (gl.keys[XK_a]) {
+        // g.ship.pos[0] -= 1.0f;
 		g.ship.angle += 4.0;
 		if (g.ship.angle >= 360.0f)
 			g.ship.angle -= 360.0f;
 	}
-	if (gl.keys[XK_Right]) {
+	if (gl.keys[XK_d]) {
+        // g.ship.pos[0] += 1.0f;
 		g.ship.angle -= 4.0;
 		if (g.ship.angle < 0.0f)
 			g.ship.angle += 360.0f;
 	}
-	if (gl.keys[XK_Up]) {
-		//apply thrust
+	if (gl.keys[XK_w]) {
+        
+
 		//convert ship angle to radians
 		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
 		//convert angle to a vector
 		Flt xdir = cos(rad);
 		Flt ydir = sin(rad);
+		g.ship.pos[0] += xdir * 2.0f;
+		g.ship.pos[1] += ydir * 2.0f;
+	}
+    if (gl.keys[XK_s]) {
+		//apply thrust
+		//convert ship angle to radians
+		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+		//convert angle to a vector
+		Flt xdir = -cos(rad);
+		Flt ydir = -sin(rad);
 		// J ship movemnt, Swtiched ship.vel to ship.pos to remove drift effect
 		g.ship.pos[0] += xdir * 2.0f;
 		g.ship.pos[1] += ydir * 2.0f;
 	}
+
+    if (gl.keys[XK_p]) {
+        if (!gl.pause_key_pressed) {
+            gl.game_paused = !gl.game_paused;
+            gl.pause_key_pressed = true;
+        } 
+    } else {
+        gl.pause_key_pressed = false;
+    }
+
+    if (gl.keys[XK_h]) {
+        if (gl.game_paused == true) {
+            reset_game_stats();
+            gl.title_screen = 1;
+            gl.game_started = false;
+        }
+    }
     //Slime stuff
     // Update slime positions and chase player
     Slime *s = g.slimeHead;
@@ -1412,91 +1454,94 @@ void render()
    // check_level_change_color();
     //rendering_background();
 if (gl.game_started) {
-    if (gl.grass) {
-
-        glColor4f(1.0f, 1.0f, 1.0f, 0.0f);
-        glBindTexture(GL_TEXTURE_2D, gl.grass_texture);
-        glBegin(GL_QUADS);
-            glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
-            glTexCoord2f(0.0f, 0.0f); glVertex2i(0, gl.yres);
-            glTexCoord2f(1.0f, 0.0f); glVertex2i(gl.xres, gl.yres);
-            glTexCoord2f(1.0f, 1.0f); glVertex2i(gl.xres, 0);
-        glEnd();
-        //glDisable(GL_TEXTURE_2D);
-    }
-    //glEnable(GL_TEXTURE_2D);
-    check_level_change_color();
-    rendering_background();
-	stats.bot = 0;
-	stats.left = gl.xres-140;
-	stats.center = 0;
-	show_player_hearts(&stats, gl.yres, 5);
-    show_score();
-	renderPLayerIcon(g.ship.pos[0], g.ship.pos[1], 40.0, g.ship.angle);
-    
-    draw_player_health_bar(g.ship.pos[0], g.ship.pos[1], gl.player_health, 10);
-	
-///-----------------------------------------------
-    float wid = 120.0f;
-    float scale =  1.0 - hat.damage;
-////---------------------------------------------
-	r.bot = gl.yres - 20;
-	r.left = 10;
-	r.center = 0;
-
-	levelText(&r);
-	ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
-    ggprint8b(&r, 16, 0x00ff00ff, "c for credits: ");
-    ggprint8b(&r, 15, 0x00ff00ff, "t for title");
-
-    if (gl.credits) {
-        show_all(&r, gl.xres, gl.yres, timeSpan, gl.credits);
-    }
-    glColor3f(1.0, 1.0, 1.0);
-    //glEnable(GL_TEXTURE_2D);
-    //gl.main_hat = 1;
-    if (gl.player_score >= 1000 && (!(gl.player_score >= 2000)))
-        gl.main_hat = 1;
-    else if (gl.player_score < 1000)
-        gl.main_hat = 0;
-    if(gl.main_hat && gl.current_level == 2) {
-        //render_hound();
-        //show_hound();
-        glPushMatrix();
-        // replacing with hat for the moment
-        glTranslatef(hat.pos[0], hat.pos[1], hat.pos[2]);
-        if (gl.hat_silhouette) {
-            glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
-        } else {
-            glBindTexture(GL_TEXTURE_2D, gl.hat_silhouette_texture);
-            glEnable(GL_ALPHA_TEST);
-            glAlphaFunc(GL_GREATER, 0.0f);
-            glColor4ub(255,255,255,255);
-        }
-
-        //glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
-   // }
-    if (hat.being_hit) {
-        glColor4f(1.0f, 1.0f - hat.damage, 1.0 - hat.damage, 1.0f);
-        glScalef(scale, scale, 1.0f);
-    }
-    glBegin(GL_QUADS);
-    if(g.ship.vel[0] > 0.0) {
-        glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
-        glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
-        glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
-        glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
-
+    if (gl.game_paused == true) {
+        render_pause_screen(&r);
     } else {
-        glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
-        glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
-        glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
-        glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+        if (gl.grass) {
+
+            glColor4f(1.0f, 1.0f, 1.0f, 0.0f);
+            glBindTexture(GL_TEXTURE_2D, gl.grass_texture);
+            glBegin(GL_QUADS);
+                glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+                glTexCoord2f(0.0f, 0.0f); glVertex2i(0, gl.yres);
+                glTexCoord2f(1.0f, 0.0f); glVertex2i(gl.xres, gl.yres);
+                glTexCoord2f(1.0f, 1.0f); glVertex2i(gl.xres, 0);
+            glEnd();
+            //glDisable(GL_TEXTURE_2D);
+        }
+        //glEnable(GL_TEXTURE_2D);
+        check_level_change_color();
+        rendering_background();
+        stats.bot = 0;
+        stats.left = gl.xres-140;
+        stats.center = 0;
+        show_player_hearts(&stats, gl.yres);
+        show_score();
+        renderPLayerIcon(g.ship.pos[0], g.ship.pos[1], 40.0, g.ship.angle);
+        
+        draw_player_health_bar(g.ship.pos[0], g.ship.pos[1], gl.player_health, 10);
+        
+    ///-----------------------------------------------
+        float wid = 120.0f;
+        float scale =  1.0 - hat.damage;
+    ////---------------------------------------------
+        r.bot = gl.yres - 20;
+        r.left = 10;
+        r.center = 0;
+
+        levelText(&r);
+        ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
+        ggprint8b(&r, 16, 0x00ff00ff, "c for credits: ");
+        ggprint8b(&r, 15, 0x00ff00ff, "t for title");
+
+        if (gl.credits) {
+            show_all(&r, gl.xres, gl.yres, timeSpan, gl.credits);
+        }
+        glColor3f(1.0, 1.0, 1.0);
+        //glEnable(GL_TEXTURE_2D);
+        //gl.main_hat = 1;
+        if (gl.player_score >= 1000 && (!(gl.player_score >= 2000)))
+            gl.main_hat = 1;
+        else if (gl.player_score < 1000)
+            gl.main_hat = 0;
+        if(gl.main_hat && gl.current_level == 2) {
+            //render_hound();
+            //show_hound();
+            glPushMatrix();
+            // replacing with hat for the moment
+            glTranslatef(hat.pos[0], hat.pos[1], hat.pos[2]);
+            if (gl.hat_silhouette) {
+                glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
+            } else {
+                glBindTexture(GL_TEXTURE_2D, gl.hat_silhouette_texture);
+                glEnable(GL_ALPHA_TEST);
+                glAlphaFunc(GL_GREATER, 0.0f);
+                glColor4ub(255,255,255,255);
+            }
+
+            //glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
+    // }
+        if (hat.being_hit) {
+            glColor4f(1.0f, 1.0f - hat.damage, 1.0 - hat.damage, 1.0f);
+            glScalef(scale, scale, 1.0f);
+        }
+        glBegin(GL_QUADS);
+        if(g.ship.vel[0] > 0.0) {
+            glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+            glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+            glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+            glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+
+        } else {
+            glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+            glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+            glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+            glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+        }
+        glEnd();
+        glPopMatrix();
     }
-    glEnd();
-    glPopMatrix();
-    
-    //physics_hat();
+
 }
     
     renderSlimeBoss();

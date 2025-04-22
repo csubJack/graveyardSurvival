@@ -11,26 +11,38 @@
 
 
 
+// TODO: 	   add bullet hit counter -- Not all monsters are one shot
+//	     	   remove bg from player icon
+//			   fix transparent part of hat from dealing damage
+			// make window bigger -- adjust spawn points and barriers
+			// collision detection between slime and barriers
+			// spin render functions into personal file
+			// add settings menu
+			// add ability to jump from level to level
 
-void show_player_hearts (Rect *r, int yres, int playerHealth)
+void show_player_hearts (Rect *r, int yres)
 {
     r->bot = yres - 30;
+	char monsters_killed_this_level[100];
+	char bullets_accuracy_string_this_level[100];
+	float bullets_accuracy_this_level = 0.0f;
+	if (gl.bullets_shot > 0.0) {
+		bullets_accuracy_this_level = (float)gl.monsters_killed / (float)gl.bullets_shot;
 
-    for (int i=0; i < playerHealth; i++) {
-        ggprint8b(r, 24, 0xffff0000, "H");
-        // Displays Hearts All in one row with 20 Gap between them.
-        r->left += 20;
-        r->bot = yres - 30;
+	}
 
-        // Add score Here and other Game metrics as needed
-    }
+	sprintf(monsters_killed_this_level, "Monsters Killed: %d", gl.monsters_killed);
+	ggprint8b(r, 24, 0xffffff00, monsters_killed_this_level);
+
+	sprintf(bullets_accuracy_string_this_level, "Accuracy: %f", bullets_accuracy_this_level);
+	ggprint8b(r, 24, 0xffffff00, bullets_accuracy_string_this_level);
 }
 
 float update_player_angle (float xCoordinate, float xPlayer,float yCoordinate, float yPlayer) 
 {
 	float x = xCoordinate - xPlayer;
 	float y = yCoordinate - yPlayer;
-	return atan2(x,y) * (180 / M_PI);
+	return atan2(x,y) * (180 / M_PI) + 180;
 	// std::cout << g.ship.angle << std::endl;
 }
 
@@ -40,6 +52,9 @@ void reset_game_stats () {
 	gl.bullets_shot = 0;
 	gl.monsters_killed = 0;
 	gl.bullet_accuracy = 0;
+	gl.pause_key_pressed = false;
+	gl.game_paused = false;
+	gl.title_hat = 1;
 } 
 void game_over(Rect *r, int xres, int yres) {
 
@@ -60,7 +75,6 @@ void game_over(Rect *r, int xres, int yres) {
     r->center = 30;
     r->bot = yres / 2 + 120;
     r->left = xres/2;
-	
 	// Overall Accuracy Calculation
 	float bullets_accuracy = 0.0f;
 	// if not shots fired accurcay is zero
@@ -94,7 +108,8 @@ void handle_shot( int &lastShot) {
 
     // std::cout << g.ship.angle << std::endl;
 
-	Bullet &b = g.barr[g.nbullets];
+	if (!gl.game_paused && !gl.game_over_screen) {
+		Bullet &b = g.barr[g.nbullets];
 	// 	//convert ship angle to radians
 		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
 		//convert angle to a vector
@@ -137,4 +152,39 @@ void handle_shot( int &lastShot) {
 
         ++g.nbullets;
 		gl.bullets_shot++;  
+	}
+
+	
+}
+
+void render_pause_screen(Rect *r) {
+	float xres = gl.xres;
+	float yres = gl.yres;
+
+	gl.game_paused = true;
+	glColor3f(0.0f, 0.0f, 0.0f);
+
+	glBegin(GL_QUADS);
+
+	glVertex2i(0,0);
+	glVertex2i(0,yres);
+	glVertex2i(xres,yres);
+	glVertex2i(xres,0);
+
+	glEnd();
+	r->center = 30;
+    r->bot = yres / 2 + 120;
+    r->left = xres/2;
+
+	
+    ggprint16(r, 36, 0x00ff0000, "Game Paused");
+
+    r->bot = yres / 2 + 30;
+    ggprint16(r, 36, 0xffffffff, "Press H to return to title screen");
+    ggprint12(r, 24, 0xffffffff, "press P to Resume Game");
+   
+
+    r->bot = yres / 2 - 30;
+   
+
 }

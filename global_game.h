@@ -43,6 +43,8 @@ class Global {
         int grass;
         int hat_silhouette;
         bool game_started;
+        bool game_paused;
+        bool pause_key_pressed;
         GLuint witch_texture;
         GLuint hat_texture;
         GLuint hat_silhouette_texture;
@@ -66,6 +68,8 @@ class Global {
             character_screen = 0;
             current_level = 1;
             game_started = false;
+            game_paused = false;
+            pause_key_pressed = false;
             grass = 1;
             //-----------------------
             //player stats
@@ -86,7 +90,6 @@ class Global {
         Vec acc;
         float angle;
         float color[3];
-        int playerHealth;
     public:
         Ship() {
             pos[0] = (Flt)(640/2); //xres 
