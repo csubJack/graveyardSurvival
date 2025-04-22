@@ -64,8 +64,8 @@ void show_title(Rect *r, int xres, int yres)
     ggprint12(r, 24, 0xffffffff, "Press space to start");
     // any other instructions we want to give to the player
     r->bot = yres / 2 - 30;
-    ggprint8b(r, 16, 0x00ff00ff, "up arrow to move");
-    ggprint8b(r, 16, 0x00ff00ff, "left and right arrow to rotate");
+    ggprint8b(r, 16, 0x00ff00ff, "WASD to move");
+    //ggprint8b(r, 16, 0x00ff00ff, "left and right arrow to rotate");
     ggprint8b(r, 16, 0x00ff00ff, "space to fire");
 }
 //------------------------------
@@ -73,6 +73,18 @@ void show_title(Rect *r, int xres, int yres)
 extern void levelText (Rect  *r);
 extern void render();
 
+void show_level_one() 
+{
+    render();
+    Rect r;
+    r.center = 30;
+    r.bot = gl.yres / 2 + 120;
+    r.left = gl.xres/2;
+    if (gl.player_score == 0) {
+        ggprint16(&r, 16, 0x00ffffff, "Level One");
+    }
+
+}
 void show_level_two_test()
 {
     render();
@@ -81,7 +93,7 @@ void show_level_two_test()
     r.center = 30;
     r.bot = gl.yres / 2 + 120;
     r.left = gl.xres/2;
-    if (gl.player_score < 200)
+    if (gl.player_score < 1250)
     {
         ggprint16(&r, 16, 0x00ffffff, "Level Two");
     }
@@ -121,17 +133,16 @@ void show_score()
 {
     if (gl.game_started) {
     Rect r;
-    //gl.player_score = 0;
     r.bot = gl.yres - 80;
     r.left = 10;
     r.center = 0;
     ggprint8b(&r, 16, 0x00ff00ff, "Score: %i", gl.player_score);
-    //if (gl.game_started)
-      //  gl.player_score += 1;
     }
 }
 void checking_level_transition()
 {
+    if (gl.player_score == 0 && gl.game_started)
+        show_level_one();
     if (gl.player_score >= 1000 && (!(gl.player_score >= 2000))) {
         while (g.slimeHead) {
             Slime *s = g.slimeHead;
@@ -202,6 +213,7 @@ void get_tombstone_size(TombstoneType type, float *width, float *height)
         case TOMBSTONE_NORMAL:
             *width = 40;
             *height = 80;
+           // *radius =
             break;
         case TOMBSTONE_CHUNKY:
             *width = 100;
@@ -357,40 +369,11 @@ void tombstone_physics_on_slimes(Slime *s)
         float w, h;
         get_tombstone_size(tombstones[i].type, &w, &h);
         Tombstone *tomb_pos = &tombstones[i];
-       // option 1 
-       /* if (s->pos[0] + s->radius > tomb_pos->x &&
-            s->pos[0] - s->radius < tomb_pos->x + w &&
-            s->pos[1] + s->radius > tomb_pos->y &&
-            s->pos[1] - s->radius < tomb_pos->y + h) {
-            
-            float dx = s->pos[0] - (tomb_pos->x + w / 4.0);
-            float dy = s->pos[1] - (tomb_pos->y + h / 4.0);
-            float overlap_x = (w / 2.0 + s->radius) + fabs(dx); 
-            float overlap_y = (h / 2.0 + s->radius) - fabs(dy);
-            // x first
-            if (overlap_x < overlap_y) {
-                if (dx > 0)
-                    s->pos[0] += overlap_x;
-                else
-                    s->pos[0] -= overlap_x;
-                s->vel[0] = 0;
-            } else {
-                // otherwise y
-                if (dy > 0)
-                    s->pos[1] += overlap_y;
-                else
-                    s->pos[1] -= overlap_y;
-                
-                s->vel[1] = 0;
-            }
-
-        }
-        */
         //option 2
-        float slime_left   = s->pos[0] - s->radius;
-        float slime_right  = s->pos[0] + s->radius;
-        float slime_top    = s->pos[1] + s->radius;
-        float slime_bottom = s->pos[1] - s->radius;
+        float slime_left   = s->pos[0] - s->radius / 2;
+        float slime_right  = s->pos[0] + s->radius / 2;
+        float slime_top    = s->pos[1] + s->radius / 2;
+        float slime_bottom = s->pos[1] - s->radius / 2;
 
         float tomb_left   = tomb_pos->x;
         float tomb_right  = tomb_pos->x + w;
@@ -411,6 +394,8 @@ void tombstone_physics_on_slimes(Slime *s)
                     s->pos[0] += overlap_x;
                 }
                 s->vel[0] = 0;
+                //s->pos[1] += 5;
+                //s->vel[1] += 5;
             } else {
                 if (s->pos[1] < tomb_pos->y) {
                     s->pos[1] -= overlap_y;
@@ -418,6 +403,8 @@ void tombstone_physics_on_slimes(Slime *s)
                     s->pos[1] += overlap_y;
                 }
                 s->vel[1] = 0;
+                //s->vel[0] += 5;
+                //s->pos[0] += 5;
             }
         }
     }
@@ -430,7 +417,6 @@ void tombstone_physics()
         float w, h;
         get_tombstone_size(tombstones[i].type, &w, &h);
         Tombstone *tomb_pos = &tombstones[i];
-        //printf("just formed all the tomb_pos");
         if (g.ship.pos[0] + gl.player_size > tomb_pos->x 
                 && g.ship.pos[0] - gl.player_size < tomb_pos->x + w 
                 && g.ship.pos[1] + gl.player_size > tomb_pos->y 
@@ -466,7 +452,18 @@ void tombstone_physics()
             }
             //break;
         }
-        //------------- How Slimes React with Tombstones---------//
+        //------------- How Bullets React with Tombstones---------//
+        /*while (i < g.nbullets) {
+            Bullet *b = &g.barr[i];
+            Flt d0 = b->pos[0] - tomb_pos->x;
+            Flt d1 = b->pos[1] - tomb_pos->y;
+            Flt distance_bt = (d0 * d0 + d1 * d1);
+            if (distance_bt == 0) {
+                memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
+                    g.nbullets--;
+                    }
+        }*/
+
     }
 }
 void witch_forest_physics()

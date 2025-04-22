@@ -171,6 +171,7 @@ class Global {
         TOMBSTONE_SHORTWIDE
     } TombstoneType;
     typedef struct {
+        /// maybe add radius
         float x, y;
         TombstoneType type;
     } Tombstone;

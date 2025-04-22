@@ -880,9 +880,6 @@ int check_keys(XEvent *e)
                gl.game_started = !gl.game_started;
            }
            break;
-		case XK_s:
-           gl.hat_silhouette ^= 1;
-			break;
         case XK_1:
             gl.player_score += 1000;
             break;
@@ -1272,7 +1269,7 @@ void physics()
             }
         }
         // collision with tombstones
-        if (s != NULL) {
+        if (s != NULL && gl.current_level == 1) {
             tombstone_physics_on_slimes(s);
         }
 
