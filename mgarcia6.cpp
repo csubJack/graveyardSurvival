@@ -582,8 +582,10 @@ void updateSlimeBoss() {
     switch(slimeBoss.state) {
         case SLIME_BOSS_IDLE:
             // In idle state, slowly move around
-            slimeBoss.vel[0] *= 0.98f;
-            slimeBoss.vel[1] *= 0.98f;
+            if (!gl.game_paused) {
+                slimeBoss.vel[0] *= 0.98f;
+                slimeBoss.vel[1] *= 0.98f;
+            }
 
             // Change to chase after a short time
             if (stateTime > 2.0) {
@@ -595,29 +597,31 @@ void updateSlimeBoss() {
         case SLIME_BOSS_CHASE:
             // Chase the player
             {
-                float dx = g.ship.pos[0] - slimeBoss.pos[0];
-                float dy = g.ship.pos[1] - slimeBoss.pos[1];
-                float dist = sqrt(dx*dx + dy*dy);
+                if (!gl.game_paused) {
+                    float dx = g.ship.pos[0] - slimeBoss.pos[0];
+                    float dy = g.ship.pos[1] - slimeBoss.pos[1];
+                    float dist = sqrt(dx*dx + dy*dy);
 
-                // steer toward player
-                if (dist > 0) {
-                    slimeBoss.vel[0] = slimeBoss.vel[0] * 0.95f + (dx/dist * 1.5f) * 0.05f;
-                    slimeBoss.vel[1] = slimeBoss.vel[1] * 0.95f + (dy/dist * 1.5f) * 0.05f;
-                }
+                    // steer toward player
+                    if (dist > 0) {
+                        slimeBoss.vel[0] = slimeBoss.vel[0] * 0.95f + (dx/dist * 1.5f) * 0.05f;
+                        slimeBoss.vel[1] = slimeBoss.vel[1] * 0.95f + (dy/dist * 1.5f) * 0.05f;
+                    }
 
-                // limit speed
-                float speed = sqrt(slimeBoss.vel[0]*slimeBoss.vel[0] + slimeBoss.vel[1]*slimeBoss.vel[1]);
-                if (speed > 2.0f) {
-                    slimeBoss.vel[0] = slimeBoss.vel[0] / speed * 2.0f;
-                    slimeBoss.vel[1] = slimeBoss.vel[1] / speed * 2.0f;
-                }
+                    // limit speed
+                    float speed = sqrt(slimeBoss.vel[0]*slimeBoss.vel[0] + slimeBoss.vel[1]*slimeBoss.vel[1]);
+                    if (speed > 2.0f) {
+                        slimeBoss.vel[0] = slimeBoss.vel[0] / speed * 2.0f;
+                        slimeBoss.vel[1] = slimeBoss.vel[1] / speed * 2.0f;
+                    }
 
-                // attack if close to player or after a while
-                if (dist < 150 || stateTime > 5.0) {
-                    slimeBoss.state = SLIME_BOSS_ATTACK;
-                    clock_gettime(CLOCK_REALTIME, &slimeBoss.stateTimer);
-                    clock_gettime(CLOCK_REALTIME, &slimeBoss.attackTimer);
-                }
+                    // attack if close to player or after a while
+                    if (dist < 150 || stateTime > 5.0) {
+                        slimeBoss.state = SLIME_BOSS_ATTACK;
+                        clock_gettime(CLOCK_REALTIME, &slimeBoss.stateTimer);
+                        clock_gettime(CLOCK_REALTIME, &slimeBoss.attackTimer);
+                    }
+                } 
             }
             break;
 
@@ -720,7 +724,8 @@ void updateSlimeBoss() {
     }
 
     // Update position - only if not in split mode or if split timer is low
-    if (slimeBoss.state != SLIME_BOSS_SPLIT || slimeBoss.splitTimer < 3.0f) {
+    if ((slimeBoss.state != SLIME_BOSS_SPLIT || slimeBoss.splitTimer < 3.0f)
+            && (!gl.game_paused)) {
         slimeBoss.pos[0] += slimeBoss.vel[0];
         slimeBoss.pos[1] += slimeBoss.vel[1];
     }

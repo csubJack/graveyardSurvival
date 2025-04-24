@@ -121,6 +121,7 @@ Image img[5] = {
 "./images/pixel_skeleton.png",
 "./images/grass.png"
 };
+// witch
 
 
 //------------------------------------------------------------------------
@@ -455,6 +456,7 @@ int main()
     gl.title_hat = 1;
     gl.main_hat = 0;
     move_hat();
+    //gl.moon_shine_timer +=1;
     //show_hound();
     //init(); show hat should replace this
 	srand(time(NULL));
@@ -589,6 +591,7 @@ void reset_game_animation() {
     g.ship.vel[0] = 0.0f;
     g.ship.vel[1] = 0.0f;
     g.nbullets = 0; // clears bullet
+    gl.regular_timer = 0;
     //gl.current_level = 1;
     // show_hat();
     while (g.slimeHead) {
@@ -904,8 +907,10 @@ void physics_hat()
     static float speed = 5.0f;
     static float hat_active = 0;
     //Update position
-    hat.pos[0] += hat.vel[0];
-    hat.pos[1] += hat.vel[1];
+    if (!gl.game_paused) {
+        hat.pos[0] += hat.vel[0];
+        hat.pos[1] += hat.vel[1];
+    }
     if (gl.current_level == 1) {
         //Check for collision with window edges
         if ((hat.pos[0] < -140.0 && hat.vel[0] < 0.0) ||
@@ -926,7 +931,7 @@ void physics_hat()
             hat.vel[1] -= 0.75;
     }
     //if (gl.current_level == 2) {
-    if (gl.current_level == 2) {
+    if (gl.current_level == 2 && (!gl.game_paused)) {
         //MakeVector(-150.0, 180.0, 0.0, hat.pos);
         if (!hat_active ||
         hat.pos[0] < -100 || hat.pos[0] > gl.xres + 100 ||
@@ -1096,19 +1101,19 @@ void physics()
 	//---------------------------------------------------
 	//check keys pressed now
     //current g.ship.angle, changing that gl.witch.angle and so on
-	if (gl.keys[XK_a]) {
+	if (gl.keys[XK_a] && (!gl.game_paused)) {
         // g.ship.pos[0] -= 1.0f;
 		g.ship.angle += 4.0;
 		if (g.ship.angle >= 360.0f)
 			g.ship.angle -= 360.0f;
 	}
-	if (gl.keys[XK_d]) {
+	if (gl.keys[XK_d] && (!gl.game_paused)) {
         // g.ship.pos[0] += 1.0f;
 		g.ship.angle -= 4.0;
 		if (g.ship.angle < 0.0f)
 			g.ship.angle += 360.0f;
 	}
-	if (gl.keys[XK_w]) {
+	if (gl.keys[XK_w] && (!gl.game_paused)) {
         
 
 		//convert ship angle to radians
@@ -1119,7 +1124,7 @@ void physics()
 		g.ship.pos[0] += xdir * 2.0f;
 		g.ship.pos[1] += ydir * 2.0f;
 	}
-    if (gl.keys[XK_s]) {
+    if (gl.keys[XK_s] && gl.game_paused) {
 		//apply thrust
 		//convert ship angle to radians
 		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
@@ -1285,7 +1290,8 @@ void physics()
     update_medkit();
 	if (gl.current_level == 1)
         tombstone_physics();
-    if (gl.current_level == 1 || gl.current_level == 3)
+    //&& (!gl.game_paused)
+    if ((gl.current_level == 1 || gl.current_level == 3))
         move_slimes();
     if (gl.current_level == 2)
         witch_forest_physics();
@@ -1387,6 +1393,7 @@ void title_render()
     if(!gl.game_started) {
          if (gl.title_screen) {
         show_title(&r, gl.xres, gl.yres);
+            gl.moon_shine_timer += 1;
         //draw_Iris(&r, gl.xres, gl.yres);
         gl.title_hat = 1;
         //glColor3f(1.0, 1.0, 1.0);
@@ -1455,6 +1462,8 @@ void render()
    // check_level_change_color();
     //rendering_background();
 if (gl.game_started) {
+    if(!gl.game_paused)
+        gl.regular_timer += 1;
     if (gl.game_paused == true) {
         render_pause_screen(&r);
     } else {
@@ -1492,11 +1501,12 @@ if (gl.game_started) {
 
         levelText(&r);
         ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
-        ggprint8b(&r, 16, 0x00ff00ff, "c for credits: ");
-        ggprint8b(&r, 15, 0x00ff00ff, "t for title");
+        ggprint8b(&r, 16, 0x00ffff00, "c for credits: ");
+        ggprint8b(&r, 15, 0x00ffff00, "t for title");
 
         if (gl.credits) {
-            show_all(&r, gl.xres, gl.yres, timeSpan, gl.credits);
+            Rect credits_rect;
+            show_all(&credits_rect, gl.xres, gl.yres, timeSpan, gl.credits);
         }
         glColor3f(1.0, 1.0, 1.0);
         //glEnable(GL_TEXTURE_2D);
@@ -1623,12 +1633,12 @@ if (gl.game_started) {
         glPopMatrix();
         s = s->next;
     }
-    r.bot = gl.yres - 100;
+    r.bot = gl.yres - 110;
     render_medkit();
     // Add slime count to UI
-    //if (gl.current_level == 1) {
+    if (!gl.game_paused) {
         ggprint8b(&r, 16, 0x00ffff00, "n slimes: %i", g.nslimes);
-    //}
+    }
 //--------------------------------------------------------------------------
 
     extern void drawSkeleton(); // Julio

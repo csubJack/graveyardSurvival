@@ -43,23 +43,48 @@ void show_all(Rect *r, int xres, int yres,
     r->left = xres / 2;
     // edditing some values, started at 16
     // moving to 32 
-    ggprint8b(r, 32, 0x00ff00ff, "Diego - Programmer");
-    ggprint8b(r, 32, 0x00ff00ff, "Kenneth - Programmer");
-    ggprint8b(r, 32, 0x00ff00ff, "Jack - Programmer");
-    ggprint8b(r, 32, 0x00ff00ff, "Julio - Programmer");
-    ggprint8b(r, 32, 0x00ff00ff, "Miguel - Programmer");
+    ggprint8b(r, 32, 0x00ffff00, "Diego - Programmer");
+    ggprint8b(r, 32, 0x00ffff00, "Kenneth - Programmer");
+    ggprint8b(r, 32, 0x00ffff00, "Jack - Programmer");
+    ggprint8b(r, 32, 0x00ffff00, "Julio - Programmer");
+    ggprint8b(r, 32, 0x00ffff00, "Miguel - Programmer");
 }
-
 void show_title(Rect *r, int xres, int yres)
 {
     gl.player_score = 0;
+//    int moon_shine_timer = 0;
+    /// add a moon to the backround, and gave at a shine
+    float moon_radius = ((xres < yres) ? xres : yres) / 7.0f; // adjust denominator for desired size
+    float moon_x = xres - moon_radius - 20;
+    float moon_y = yres - moon_radius - 20;
+    float shine = 0.5f + 0.5f * sin((2 * M_PI / 30.0f) * gl.moon_shine_timer);
+    float moon_brightness = 0.5f + 0.5f * shine;
+    /// switching from predefined to determined by screen sizx
+    /// 80 to 20
+    /// right now multiplying by xres/yres and then dividing by 250 and 200
+    //float moon_width = 80.0f;
+    //float moon_height = 80.0f;
+    //float moon_x = xres - moon_width - 20;
+    //float moon_y = yres - moon_height - 20;
+    glDisable(GL_TEXTURE_2D);
+    glColor3f(moon_brightness, moon_brightness, moon_brightness);
+    glBegin(GL_TRIANGLE_FAN);
+        glVertex2f(moon_x, moon_y); // center
+        for (int i = 0; i <= 100; ++i) {
+            float angle = i * 2.0f * M_PI / 100;
+            float dx = cos(angle) * moon_radius;
+            float dy = sin(angle) * moon_radius;
+            glVertex2f(moon_x + dx, moon_y + dy);
+        }
+    glEnd();
+    glEnable(GL_TEXTURE_2D);
+    //draw_moon();
     //centering the title screen
     r->center = 30;
     r->bot = yres / 2 + 120;
     r->left = xres/2;
 
     ggprint16(r, 36, 0x00ff0000, "Graveyard Survival");
-
     r->bot = yres / 2 + 30;
     ggprint12(r, 24, 0xffffffff, "Press space to start");
     // any other instructions we want to give to the player
@@ -80,7 +105,7 @@ void show_level_one()
     r.center = 30;
     r.bot = gl.yres / 2 + 120;
     r.left = gl.xres/2;
-    if (gl.player_score == 0) {
+    if (gl.player_score == 0 && !gl.game_paused) {
         ggprint16(&r, 16, 0x00ffffff, "Level One");
     }
 
@@ -93,9 +118,11 @@ void show_level_two_test()
     r.center = 30;
     r.bot = gl.yres / 2 + 120;
     r.left = gl.xres/2;
-    if (gl.player_score < 1250)
+    if (gl.player_score < 1250 && !gl.game_paused)
     {
         ggprint16(&r, 16, 0x00ffffff, "Level Two");
+        r.bot = gl.yres / 2 + 150;
+        ggprint16(&r, 1, 0x00ff0000, "The Witch's Hat is Here");
     }
 }
 void show_level_three() 
@@ -106,7 +133,7 @@ void show_level_three()
     r.center = 30;
     r.bot = gl.yres / 2 + 120;
     r.left = gl.xres/2;
-    if (gl.player_score < 2200)
+    if (gl.player_score < 2200 && !gl.game_paused)
     {
         ggprint16(&r, 16, 0x00ffffff, "Level Three");
     }
@@ -120,7 +147,7 @@ void show_level_four()
     r.center = 30;
     r.bot = gl.yres / 2 + 120;
     r.left = gl.xres/2;
-    if (gl.player_score < 3200)
+    if (gl.player_score < 3200 && !gl.game_paused)
     {
         ggprint16(&r, 16, 0x00ffffff, "Level Four");
     }
@@ -136,7 +163,8 @@ void show_score()
     r.bot = gl.yres - 80;
     r.left = 10;
     r.center = 0;
-    ggprint8b(&r, 16, 0x00ff00ff, "Score: %i", gl.player_score);
+    ggprint8b(&r, 16, 0x00ffff00, "Score: %i", gl.player_score);
+    ggprint8b(&r, 16, 0x00ffff00, "Time: %i", gl.regular_timer);
     }
 }
 void checking_level_transition()
@@ -339,6 +367,7 @@ void draw_witch_house(float x, float y, float width, float height)
         glVertex2f(x - width * 0.35f, y + height * 0.5f + windowSize);
     glEnd();
     if (gl.current_level == 3) {
+        // changing to 50.0f, 10
         float roadWidth = 20.0f;
         float startY = y;
         float segments = 10;
@@ -542,8 +571,10 @@ void rendering_background()
         }
     }
     else if (gl.current_level == 3) {
+        // changing size to be smaller as if in the distance
+        // 50 to 25
         draw_witch_house(310,400, 50, 50);
-
+        // thinking of bushes, a few tombstones, and trees
     }
   /*   a series of while loops could work
      level 1 grave stones, tombs, and sarcaphagi
@@ -582,6 +613,15 @@ void move_slimes()
     Slime * s = g.slimeHead;
     float speed = 0.5f;
     while (s) {
+        if (gl.game_paused) {
+            s->vel[0] = 0;
+            s->vel[1] = 0;
+            s->pos[0] = s->pos[0];
+            s->pos[1] = s->pos[1];
+            s = s->next;
+            speed = 0;
+            //continue;
+        } else {
         float dx = gl.player_center_x - s->pos[0];
         float dy = gl.player_center_y - s->pos[1];
 
@@ -600,6 +640,7 @@ void move_slimes()
         s->pos[1] += s->vel[1];
 
         s= s->next;
+        }
     }
 }
 

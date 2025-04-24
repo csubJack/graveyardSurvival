@@ -39,7 +39,8 @@ class Global {
         float bullet_accuracy;
         int current_level;
         // end Player Metrics 
-        
+        int regular_timer;
+        int moon_shine_timer;        
         int grass;
         int hat_silhouette;
         bool game_started;
@@ -71,6 +72,8 @@ class Global {
             game_paused = false;
             pause_key_pressed = false;
             grass = 1;
+            moon_shine_timer = 0;
+            regular_timer = 0;
             //-----------------------
             //player stats
             player_size = 10.0;
