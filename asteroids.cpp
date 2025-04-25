@@ -440,6 +440,9 @@ extern void move_hat();
 extern void move_slimes();
 extern void checking_invincible_timer();
 extern void rendering_background();
+void create_default_scoreboard();
+void render_leaderboard_page();
+bool verify_high_score();
 //extern void show_hound();
 //void show_hound();
 // animation rest
@@ -456,6 +459,7 @@ int main()
     gl.title_hat = 1;
     gl.main_hat = 0;
     move_hat();
+    create_default_scoreboard();
     //gl.moon_shine_timer +=1;
     //show_hound();
     //init(); show hat should replace this
@@ -492,6 +496,9 @@ int main()
             } else if (gl.game_over_screen) {
                 reset_game_animation();
                 reset_title_animation();
+                if (gl.player_score > gl.top_scores.back().first) {
+                    cout << "high score" << endl;
+                }
             }else {
                 reset_title_animation();
                 //reset_character_screen_animation();
@@ -500,11 +507,7 @@ int main()
             previous_game_state = gl.game_started;
         }
         if (gl.game_started) {
-            // while (gl.game_paused == true) {
-            //     Rect r;
-            //     render();
-            //     render_pause_screen(&r); 
-            // }
+
             checking_invincible_timer();
             //rendering_background();
             render();
@@ -523,7 +526,12 @@ int main()
         // used to be !gl.game_started
 		if (gl.title_screen) {
             title_render();
+           
             //previous_game_state = gl.title_screen;
+        }
+        if (gl.leaderboard_screen) {
+            Rect r;
+            render_leaderboard_page(&r);
         }
         if (gl.character_screen) {
             show_score();
@@ -833,7 +841,7 @@ int check_keys(XEvent *e)
 		case XK_Escape:
 			return 1;
         case XK_space:  // removing for the moment && !gl.character_screen
-            if (!gl.game_started) {
+            if (!gl.game_started && !gl.leaderboard_screen) {
                 gl.title_screen = !gl.title_screen;
                 gl.game_started = true;
                 //gl.show_witch = true;
@@ -882,6 +890,13 @@ int check_keys(XEvent *e)
                gl.character_screen = !gl.character_screen;
                gl.game_started = !gl.game_started;
            }
+           break;
+        case XK_u:
+            if (!gl.game_started && !gl.game_paused) {
+                gl.title_screen = !gl.title_screen;
+                gl.leaderboard_screen = !gl.leaderboard_screen;
+            }
+
            break;
         case XK_1:
             gl.player_score += 1000;
@@ -1114,8 +1129,6 @@ void physics()
 			g.ship.angle += 360.0f;
 	}
 	if (gl.keys[XK_w] && (!gl.game_paused)) {
-        
-
 		//convert ship angle to radians
 		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
 		//convert angle to a vector
@@ -1137,7 +1150,7 @@ void physics()
 	}
 
     if (gl.keys[XK_p]) {
-        if (!gl.pause_key_pressed) {
+        if (!gl.pause_key_pressed && !gl.title_screen && !gl.leaderboard_screen) {
             gl.game_paused = !gl.game_paused;
             gl.pause_key_pressed = true;
         } 
@@ -1581,58 +1594,60 @@ if (gl.game_started) {
     glEnable(GL_TEXTURE_2D);
     glDisable(GL_TEXTURE_2D);
     // Draw the slimes
-    glEnable(GL_TEXTURE_2D);
-    Slime *s = g.slimeHead;
-    while (s) {
-        glColor3fv(s->color);
-        glPushMatrix();
-        glTranslatef(s->pos[0], s->pos[1], s->pos[2]);
-        glRotatef(s->angle, 0.0f, 0.0f, 1.0f);
+    
+        glEnable(GL_TEXTURE_2D);
+        Slime *s = g.slimeHead;
+        while (s && !gl.game_paused) {
+            glColor3fv(s->color);
+            glPushMatrix();
+            glTranslatef(s->pos[0], s->pos[1], s->pos[2]);
+            glRotatef(s->angle, 0.0f, 0.0f, 1.0f);
 
-        // Draw slime body (filled polygon)
-        glBegin(GL_POLYGON);
-        for (int j=0; j<s->nverts; j++) {
-            glVertex2f(s->vert[j][0], s->vert[j][1]);
+            // Draw slime body (filled polygon)
+            glBegin(GL_POLYGON);
+            for (int j=0; j<s->nverts; j++) {
+                glVertex2f(s->vert[j][0], s->vert[j][1]);
+            }
+            glEnd();
+
+            // Draw slime outline
+            glColor3f(0.0f, 0.5f, 0.0f);
+            glBegin(GL_LINE_LOOP);
+            for (int j=0; j<s->nverts; j++) {
+                glVertex2f(s->vert[j][0], s->vert[j][1]);
+            }
+            glEnd();
+
+            // Draw slime eyes (black)
+            glColor3f(0.0f, 0.0f, 0.0f);
+            float eyeSize = s->radius * 0.15;
+            glBegin(GL_POLYGON);
+            for (int i = 0; i < 8; i++) {
+                float angle = (2.0 * PI * i) / 8.0;
+                glVertex2f(s->radius * 0.3 + cos(angle) * eyeSize,
+                        s->radius * 0.3 + sin(angle) * eyeSize);
+            }
+            glEnd();
+
+            glBegin(GL_POLYGON);
+            for (int i = 0; i < 8; i++) {
+                float angle = (2.0 * PI * i) / 8.0;
+                glVertex2f(-s->radius * 0.3 + cos(angle) * eyeSize,
+                        s->radius * 0.3 + sin(angle) * eyeSize);
+            }
+            glEnd();
+
+            // Draw slime mouth (black)
+            glBegin(GL_LINE_STRIP);
+            for (float i = -0.3; i <= 0.3; i += 0.05) {
+                glVertex2f(i * s->radius, -0.1 * s->radius + sin(i*3) * 0.1 * s->radius);
+            }
+            glEnd();
+
+            glPopMatrix();
+            s = s->next;
         }
-        glEnd();
-
-        // Draw slime outline
-        glColor3f(0.0f, 0.5f, 0.0f);
-        glBegin(GL_LINE_LOOP);
-        for (int j=0; j<s->nverts; j++) {
-            glVertex2f(s->vert[j][0], s->vert[j][1]);
-        }
-        glEnd();
-
-        // Draw slime eyes (black)
-        glColor3f(0.0f, 0.0f, 0.0f);
-        float eyeSize = s->radius * 0.15;
-        glBegin(GL_POLYGON);
-        for (int i = 0; i < 8; i++) {
-            float angle = (2.0 * PI * i) / 8.0;
-            glVertex2f(s->radius * 0.3 + cos(angle) * eyeSize,
-                      s->radius * 0.3 + sin(angle) * eyeSize);
-        }
-        glEnd();
-
-        glBegin(GL_POLYGON);
-        for (int i = 0; i < 8; i++) {
-            float angle = (2.0 * PI * i) / 8.0;
-            glVertex2f(-s->radius * 0.3 + cos(angle) * eyeSize,
-                      s->radius * 0.3 + sin(angle) * eyeSize);
-        }
-        glEnd();
-
-        // Draw slime mouth (black)
-        glBegin(GL_LINE_STRIP);
-        for (float i = -0.3; i <= 0.3; i += 0.05) {
-            glVertex2f(i * s->radius, -0.1 * s->radius + sin(i*3) * 0.1 * s->radius);
-        }
-        glEnd();
-
-        glPopMatrix();
-        s = s->next;
-    }
+    
     r.bot = gl.yres - 110;
     render_medkit();
     // Add slime count to UI

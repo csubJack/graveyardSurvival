@@ -7,13 +7,15 @@
 #include <ctime>
 #include <GL/gl.h>
 #include <cstring>
-
+#include <vector>
 #include "types.h"
 
 
 // #define MAX_BULLETS 100
 #define VecZero(v) (v)[0]=0.0,(v)[1]=0.0,(v)[2]=0.0
 #define PI 3.14159265358979323846
+
+using namespace std;
 
 // typedef float Vec[3];
 // typedef double Flt;
@@ -56,8 +58,11 @@ class Global {
         float mouseYCoordinate;
         int player_health;
         float player_center_x;
-        float player_center_y;
-    
+        float player_center_y; 
+        // leaderboard logic
+        vector <pair<int, string>> top_scores;
+        bool leaderboard_screen;
+        
         Global() {
             xres = 640;
             yres = 480;
@@ -82,6 +87,8 @@ class Global {
             hat_silhouette = 0;
             player_center_x = 0.0f;
             player_center_y = 0.0f;
+            leaderboard_screen = false;
+
         }
     };
     

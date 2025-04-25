@@ -11,3 +11,6 @@ void handle_shot(int &lastShot);
 void game_over(Rect *r, int xres, int yres);
 void reset_game_stats();
 void render_pause_screen(Rect *r);
+void create_default_scoreboard();
+void render_leaderboard_page(Rect *r);
+bool verify_high_score();
