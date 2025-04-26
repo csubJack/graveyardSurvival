@@ -8,21 +8,18 @@
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <ctime>
 
-// TODO: 	   add bullet hit counter -- Not all monsters are one shot
-//	     	   remove bg from player icon
-//			   fix transparent part of hat from dealing damage
-			// make window bigger -- adjust spawn points and barriers
-			// collision detection between slime and barriers
-			// spin render functions into personal file
-			// add settings menu
-			// add ability to jump from level to level
+// TODO: add randomness  to the bomb power ups spawn time
+		//  add collision detection for bullets and tombstones
 
-bool verify_high_score() {
+bool verify_high_score() 
+{
 	return ((gl.player_score > gl.top_scores.back().first) && gl.player_score > 1);
 }
 
-void create_default_scoreboard() {
+void create_default_scoreboard() 
+{
 	// ensures size is empty before adding defualt values
 	if (gl.top_scores.size() < 1) {
 		for (int i=0; i <5; i++) {
@@ -31,7 +28,8 @@ void create_default_scoreboard() {
 	}
 }
 
-void render_leaderboard_page(Rect *r) {
+void render_leaderboard_page(Rect *r) 
+{
 	glColor3f(4.0f, 0.0f, 0.0f);
 	glBegin(GL_QUADS);
 	glVertex2i(0,0);
@@ -81,7 +79,8 @@ float update_player_angle (float xCoordinate, float xPlayer,float yCoordinate, f
 	return atan2(x,y) * (180 / M_PI) + 180;
 	// std::cout << g.ship.angle << std::endl;
 }
-void reset_game_stats () {
+void reset_game_stats () 
+{
 	gl.player_health = 10;
 	gl.bullets_shot = 0;
 	gl.monsters_killed = 0;
@@ -90,9 +89,9 @@ void reset_game_stats () {
 	gl.game_paused = false;
 	gl.title_hat = 1;
 	gl.player_score = 0;
-
 } 
-void game_over(Rect *r, int xres, int yres) {
+void game_over(Rect *r, int xres, int yres) 
+{
 	glColor3f(0.0f, 0.0f, 0.0f);
 	glBegin(GL_QUADS);
 	glVertex2i(0,0);
@@ -162,7 +161,8 @@ void game_over(Rect *r, int xres, int yres) {
 	
 }
 
-void handle_shot( int &lastShot) {
+void handle_shot( int &lastShot) 
+{
 	if (!gl.game_paused && !gl.game_over_screen) {
 		Bullet &b = g.barr[g.nbullets];
 	// 	//convert ship angle to radians
@@ -174,6 +174,8 @@ void handle_shot( int &lastShot) {
 		Flt sideY = xdir;
 		Flt rightOffset = 18.0f;
 		Flt leftOffset = -18.0f;
+
+
 		if (lastShot == 0) {
 			// Right pistol shoots
 
@@ -205,7 +207,8 @@ void handle_shot( int &lastShot) {
 	
 }
 
-void render_pause_screen(Rect *r) {
+void render_pause_screen(Rect *r) 
+{
 	float xres = gl.xres;
 	float yres = gl.yres;
 	gl.game_paused = true;
@@ -233,6 +236,101 @@ void render_pause_screen(Rect *r) {
 
     r->bot = yres / 2 - 30;
    
+
+}
+
+
+void generate_nuke_drop(float size) 
+{
+
+	if (g.nuke.count < 1 && gl.current_level ==1 ) {
+		srand(time(0));
+		Nuke nuke;
+		g.nuke.x_coordinate = 0 + rand() % (gl.xres + 1);
+		g.nuke.y_coordinate = 0 + rand() % (gl.yres + 1);
+		g.nuke.size = size;
+		g.nuke.count = 1;
+		g.nuke.nuke_active = true;
+	}
+
+}
+
+void render_nuke() 
+{
+	if (gl.current_level != 1) {
+		g.nuke.nuke_active = false;
+	}
+
+	if (g.nuke.nuke_active) {
+		// glClear(GL_COLOR_BUFFER_BIT);
+		glPushAttrib(GL_COLOR_BUFFER_BIT);
+		glBlendFunc(GL_ONE, GL_ZERO);
+
+		glDisable(GL_BLEND);
+		glDisable(GL_TEXTURE_2D);
+		glColor3f(1.0f, 1.0f, 0.0f);
+		glBegin(GL_TRIANGLE_FAN);
+		glVertex2f(g.nuke.x_coordinate, g.nuke.y_coordinate);
+		for (int i=0; i<20;i++) {
+			float angle = i * 2.0f * PI / 19;
+			float edge_x = cos(angle) * g.nuke.radius;
+			float edge_y = sin(angle) * g.nuke.radius;
+			glVertex2f(edge_x + g.nuke.x_coordinate, edge_y + g.nuke.y_coordinate);
+		}
+		glEnd();
+		glEnable(GL_BLEND);
+    	glEnable(GL_TEXTURE_2D);
+		glPopAttrib();
+	}
+}
+
+void delete_all_slimes(Slime *node) 
+{
+	// ensure player gets points for slimes destoted with power up
+	gl.player_score += (int)(50.0 / (node->radius / 30.0));
+
+	if (node->prev == NULL) {
+        if (node->next == NULL) {
+            // one item in list.
+            g.slimeHead = NULL;
+        } else {
+            // start of list.
+            node->next->prev = NULL;
+            g.slimeHead = node->next;
+        }
+    } else {
+        if (node->next == NULL) {
+            // end of list.
+            node->prev->next = NULL;
+        } else {
+            // middle of list.
+            node->prev->next = node->next;
+            node->next->prev = node->prev;
+        }
+    }
+    delete node;
+    node = NULL;
+	g.nslimes--;
+	
+}
+void nuke_collision() 
+{
+	float distance_x = g.ship.pos[0] - g.nuke.x_coordinate;
+	float distance_y = g.ship.pos[1] - g.nuke.y_coordinate;
+
+	float total_distance = sqrt(distance_x * distance_x  + distance_y * distance_y);
+
+	if (total_distance < (g.nuke.radius + gl.player_size) ) {
+		cout << "nuke collision" << endl;
+		g.nuke.nuke_active = false;
+		// g.nslimes = 0;
+		int i=0;
+		while (g.slimeHead && i < 6) {
+			delete_all_slimes(g.slimeHead);
+			i++;
+
+		}
+	}
 
 }
 

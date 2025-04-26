@@ -62,6 +62,7 @@ class Global {
         // leaderboard logic
         vector <pair<int, string>> top_scores;
         bool leaderboard_screen;
+        bool nuke_active;
         
         Global() {
             xres = 640;
@@ -88,6 +89,7 @@ class Global {
             player_center_x = 0.0f;
             player_center_y = 0.0f;
             leaderboard_screen = false;
+            nuke_active = false;
 
         }
     };
@@ -172,6 +174,22 @@ class Global {
             glowDirection = 1.0f;
         }
     };
+
+    class Nuke {
+    public:
+        float x_coordinate;
+        float y_coordinate;
+        bool nuke_active;
+        float size;
+        float radius;
+        int count;
+    public: 
+        Nuke () {
+            nuke_active = false;
+            radius = 10;
+            count = 0;
+        }
+    };
     //---------------------------------------------
     //background materials
     typedef enum {
@@ -213,12 +231,15 @@ class Global {
       //  Witch witch;
         Bullet *barr;
         int nbullets;
+        int maxBullets;
         Slime *slimeHead; //new
         int nslimes; //new
         MedKit medkit;
+        Nuke nuke;
         // struct timespec bulletTimer;
         struct timespec mouseThrustTimer;
         bool mouseThrustOn;
+
     public:
         Game() {
             barr = new Bullet[22];

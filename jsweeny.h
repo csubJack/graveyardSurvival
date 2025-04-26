@@ -14,3 +14,6 @@ void render_pause_screen(Rect *r);
 void create_default_scoreboard();
 void render_leaderboard_page(Rect *r);
 bool verify_high_score();
+void render_nuke();
+void generate_nuke_drop(); 
+void nuke_collision();

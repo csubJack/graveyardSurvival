@@ -194,7 +194,7 @@ void buildSlimeFragment(Slime *ts, Slime *s)
 void initSlimes() 
 {
     if (gl.current_level == 1 || gl.current_level == 3) {
-        for (int i = 0; i < 2; i++) { // changed to zerof to remove slimes for movement testing
+        for (int i = 0; i < 5; i++) { // changed to zerof to remove slimes for movement testing
             Slime *s = new Slime;
             s->nverts = 8;
             s->radius = 30.0 + rnd() * 40.0; // size
@@ -443,6 +443,11 @@ extern void rendering_background();
 void create_default_scoreboard();
 void render_leaderboard_page();
 bool verify_high_score();
+void render_medkit();
+
+void render_nuke();
+void generate_nuke_drop(float size); 
+void nuke_collision();
 //extern void show_hound();
 //void show_hound();
 // animation rest
@@ -510,6 +515,8 @@ int main()
 
             checking_invincible_timer();
             //rendering_background();
+            generate_nuke_drop(10.0);
+            nuke_collision();
             render();
             show_score();
             //move_slimes();
@@ -1650,6 +1657,7 @@ if (gl.game_started) {
     
     r.bot = gl.yres - 110;
     render_medkit();
+    render_nuke();
     // Add slime count to UI
     if (!gl.game_paused) {
         ggprint8b(&r, 16, 0x00ffff00, "n slimes: %i", g.nslimes);
