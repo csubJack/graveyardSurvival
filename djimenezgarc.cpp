@@ -39,10 +39,7 @@ void show_all(Rect *r, int xres, int yres,
 
     r->center = 30;
     r->bot = (int)bot_position;
-    //r->bot = yres / 2 + 60;
-    r->left = xres / 2;
-    // edditing some values, started at 16
-    // moving to 32 
+    r->left = xres / 2; 
     ggprint8b(r, 32, 0x00ffff00, "Diego - Programmer");
     ggprint8b(r, 32, 0x00ffff00, "Kenneth - Programmer");
     ggprint8b(r, 32, 0x00ffff00, "Jack - Programmer");
@@ -52,20 +49,14 @@ void show_all(Rect *r, int xres, int yres,
 void show_title(Rect *r, int xres, int yres)
 {
     gl.player_score = 0;
-//    int moon_shine_timer = 0;
     /// add a moon to the backround, and gave at a shine
-    float moon_radius = ((xres < yres) ? xres : yres) / 7.0f; // adjust denominator for desired size
+    /// denominator here determines size of moon
+    float moon_radius = ((xres < yres) ? xres : yres) / 7.0f;
     float moon_x = xres - moon_radius - 20;
     float moon_y = yres - moon_radius - 20;
     float shine = 0.5f + 0.5f * sin((2 * M_PI / 30.0f) * gl.moon_shine_timer);
     float moon_brightness = 0.5f + 0.5f * shine;
-    /// switching from predefined to determined by screen sizx
-    /// 80 to 20
-    /// right now multiplying by xres/yres and then dividing by 250 and 200
-    //float moon_width = 80.0f;
-    //float moon_height = 80.0f;
-    //float moon_x = xres - moon_width - 20;
-    //float moon_y = yres - moon_height - 20;
+    
     glDisable(GL_TEXTURE_2D);
     glColor3f(moon_brightness, moon_brightness, moon_brightness);
     glBegin(GL_TRIANGLE_FAN);
@@ -78,7 +69,6 @@ void show_title(Rect *r, int xres, int yres)
         }
     glEnd();
     glEnable(GL_TEXTURE_2D);
-    //draw_moon();
     //centering the title screen
     r->center = 30;
     r->bot = yres / 2 + 120;
@@ -90,7 +80,6 @@ void show_title(Rect *r, int xres, int yres)
     // any other instructions we want to give to the player
     r->bot = yres / 2 - 30;
     ggprint8b(r, 16, 0x00ff00ff, "WASD to move");
-    //ggprint8b(r, 16, 0x00ff00ff, "left and right arrow to rotate");
     ggprint8b(r, 16, 0x00ff00ff, "space to fire");
 }
 //------------------------------
@@ -155,7 +144,6 @@ void show_level_four()
 }
 
 //---------------------
-// include time in here
 void show_score()
 {
     if (gl.game_started) {
@@ -188,19 +176,18 @@ void checking_level_transition()
         show_level_four();
     }
 }
-
-void check_level_change_color()
+void change_grass_color()
 {
-    // changing this to white , all 0's before,
-    // three 1's gives a purple look, looks nice actually
-    if (gl.current_level == 1) //nevermind it's always red now
-       glClearColor(0.0, 0.0, 0.0, 0.0);
+    if (gl.current_level == 1) 
+        glColor4f(0.5f, 1.0f, 0.5f, 1.0f);
     else if (gl.current_level == 2)
-        glClearColor(0.2, 0.2, 0.5, 1.0);
+        glColor4f(0.9f, 0.8f, 1.0f, 1.0f);
     else if (gl.current_level == 3)
-        glClearColor(0.3, 0.4, 0.7, 0.4);
+        glColor4f(1.0f, 1.0f, 0.7f, 1.0f);
     else if (gl.current_level == 4) {
-        glClearColor(0.5, 0.5, 0.7, 0.6);
+        glColor4f(1.0f, 0.7f, 0.7f, 1.0f);
+    } else {
+        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     }
 }
 //------------------------------------------------------------------
@@ -363,7 +350,8 @@ void draw_witch_house(float x, float y, float width, float height)
     glBegin(GL_QUADS);
         glVertex2f(x - width * 0.35f, y + height * 0.5f);
         glVertex2f(x - width * 0.35f + windowSize, y + height * 0.5f);
-        glVertex2f(x - width * 0.35f + windowSize, y + height * 0.5f + windowSize);
+        glVertex2f(x - width * 0.35f + windowSize, y + height * 0.5f
+                + windowSize);
         glVertex2f(x - width * 0.35f, y + height * 0.5f + windowSize);
     glEnd();
     if (gl.current_level == 3) {
@@ -410,10 +398,14 @@ void tombstone_physics_on_slimes(Slime *s)
         float tomb_bottom = tomb_pos->y;
 
         // Checking collision
-        if (slime_right > tomb_left && slime_left < tomb_right && slime_top > tomb_bottom && slime_bottom < tomb_top) {
+        if (slime_right > tomb_left && slime_left
+                < tomb_right && slime_top > tomb_bottom
+                && slime_bottom < tomb_top) {
             // Find the overlap in both axes
-            float overlap_x = fmin(slime_right, tomb_right) - fmax(slime_left, tomb_left);
-            float overlap_y = fmin(slime_top, tomb_top) - fmax(slime_bottom, tomb_bottom);
+            float overlap_x = fmin(slime_right, tomb_right) 
+                - fmax(slime_left, tomb_left);
+            float overlap_y = fmin(slime_top, tomb_top) 
+                - fmax(slime_bottom, tomb_bottom);
 
             // Resolve in the direction of least overlap
             if (overlap_x < overlap_y) {
@@ -441,7 +433,8 @@ void tombstone_physics_on_slimes(Slime *s)
 }
 void tombstone_physics() 
 {
-    // how the player interacts with all tombstones, prevents them from going through
+    // how the player interacts with all tombstones,
+    // prevents them from going through
     for (int i = 0; i < num_tombstones; i++) {
         float w, h;
         get_tombstone_size(tombstones[i].type, &w, &h);

@@ -1457,7 +1457,7 @@ void title_render()
     //glDisable(GL_TEXTURE_2D);
 }
 
-extern void check_level_change_color();
+extern void change_grass_color();
 //extern void tombstone_physics();
 void render()
 {
@@ -1488,8 +1488,8 @@ if (gl.game_started) {
         render_pause_screen(&r);
     } else {
         if (gl.grass) {
-
-            glColor4f(1.0f, 1.0f, 1.0f, 0.0f);
+            change_grass_color();
+            //glColor4f(1.0f, 1.0f, 1.0f, 0.0f);
             glBindTexture(GL_TEXTURE_2D, gl.grass_texture);
             glBegin(GL_QUADS);
                 glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
@@ -1500,7 +1500,7 @@ if (gl.game_started) {
             //glDisable(GL_TEXTURE_2D);
         }
         //glEnable(GL_TEXTURE_2D);
-        check_level_change_color();
+        //check_level_change_color();
         rendering_background();
         stats.bot = 0;
         stats.left = gl.xres-140;
