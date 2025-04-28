@@ -190,6 +190,13 @@ class Global {
             count = 0;
         }
     };
+
+    class Witch {
+    public:
+        Vec pos;
+        Vec vel;
+        float damage = 0.0f;
+    };
     //---------------------------------------------
     //background materials
     typedef enum {
@@ -265,6 +272,7 @@ class Global {
     extern Game g;
     extern Hat hat;
     extern Hound hound;
+    extern Witch wich;
 
 #endif
 

@@ -114,12 +114,13 @@ public:
     }
 };
 
-Image img[5] = {
+Image img[6] = {
 "./images/hat.png",
 "./images/standing-still.png",
 "./images/houndDog2.png",
 "./images/pixel_skeleton.png",
-"./images/grass.png"
+"./images/grass.png",
+"./images/WitchF.png"
 };
 // witch
 
@@ -130,6 +131,7 @@ Global gl;
 Game g;
 Hat hat; 
 Hound hound;
+Witch wich;
 
 //================Slime Enemy==============================
 // deleting slime from the linked list
@@ -262,6 +264,7 @@ void loadPlayerIcon() {
 	
 }
 // Jack
+
 
 void renderPLayerIcon(float playerX, float playerY, float playerSize, float playerAngle) {
     gl.player_center_x = playerX;
@@ -659,6 +662,7 @@ void init_opengl(void)
     glGenTextures(1, &gl.hat_texture);
     glGenTextures(1, &gl.hat_silhouette_texture);
     glGenTextures(1, &gl.hound_texture);
+    glGenTextures(1, &gl.witch_texture);
 	loadPlayerIcon();
 
     //----------------------------------------------
@@ -706,6 +710,15 @@ void init_opengl(void)
     glTexImage2D(GL_TEXTURE_2D, 0, 3, img[4].width, img[4].height,
                                     0, GL_RGB, GL_UNSIGNED_BYTE, img[4].data);
 
+    
+    w = img[5].width;
+    h = img[5].height;
+    glBindTexture(GL_TEXTURE_2D, gl.witch_texture);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, img[5].width, img[5].height,
+                0, GL_RGB, GL_UNSIGNED_BYTE, img[5].data);
+                //------------------
     //trying to implement the transparency
 //    glBindTexture(GL_TEXTURE_2D, gl.hound_trans_texture);
 	//
@@ -1055,6 +1068,113 @@ void move_hound()
 
 }
 
+void witch_phys()
+{
+    //move witch
+    int addgrav = 1;
+    static float speed = 5.0f;
+    static float wich_active = 0;
+    //Update position
+    if (!gl.game_paused) {
+        wich.pos[0] += wich.vel[0];
+        wich.pos[1] += wich.vel[1];
+    }
+    if (gl.current_level == 1) {
+        //Check for collision with window edges
+        if ((wich.pos[0] < -140.0 && wich.vel[0] < 0.0) ||
+            (wich.pos[0] >= (float)gl.xres+140.0 &&
+            wich.vel[0] > 0.0))
+        {   
+            wich.vel[0] = -wich.vel[0];
+            addgrav = 0;
+        }
+        //  changing 150 to 0
+        if ((wich.pos[1] < 100.0 && wich.vel[1] < 0.0) ||
+            (wich.pos[1] >= (float)gl.yres && wich.vel[1] > 0.0)) {
+            wich.vel[1] = -wich.vel[1];
+            addgrav = 0;
+        }
+        //Gravity?
+        if (addgrav)
+            wich.vel[1] -= 0.75;
+    }
+    //if (gl.current_level == 2) {
+    if (gl.current_level == 4 && (!gl.game_paused)) {
+        //MakeVector(-150.0, 180.0, 0.0, wich.pos);
+        if (!wich_active ||
+        wich.pos[0] < -100 || wich.pos[0] > gl.xres + 100 ||
+        wich.pos[1] < -100 || wich.pos[1] > gl.yres + 100) {
+            // New position pick a corner
+            int corner = rand() % 4;
+            float X, Y;
+            switch (corner) {
+                case 0: // top left
+                    X = -100.0f;
+                    Y = gl.yres + 100.0f;
+                    break;
+                case 1: // top right
+                    X = gl.xres + 100.0f;
+                    Y = gl.yres + 100.0f;
+                    break;
+                case 2: // bottom left
+                    X = -100.0f;
+                    Y = 100.0f;
+                    break;
+                case 3: // bottom right
+                    X = gl.xres + 100.0f;
+                    Y = -100.0f;
+                    break;
+            }
+            // this was a bit unfair for the players
+            //float X = -100 + rand() % (gl.xres + 200);
+            //float Y = gl.yres + 100; // Top offscreen
+
+            MakeVector(X, Y, 0.0, wich.pos);
+
+            // Calculate direction to player
+            float dx = g.ship.pos[0] - wich.pos[0];
+            float dy = g.ship.pos[1] - wich.pos[1];
+            float dist = sqrt(dx * dx + dy * dy);
+            if (dist != 0) {
+                dx /= dist;
+                dy /= dist;
+            }
+            MakeVector(dx * speed, dy * speed, 0.0, wich.vel);
+            wich_active = 1;
+
+        }
+    }
+
+    float dist = sqrt (
+            (wich.pos[0] - g.ship.pos[0]) * (wich.pos[0] - g.ship.pos[0])
+            + (wich.pos[1] - g.ship.pos[1]) * (wich.pos[1] - g.ship.pos[1])
+            );
+    float wich_radius = 100.0;
+    if (dist < wich_radius + gl.player_size) {
+        if (!gl.player_invincible) {
+            gl.player_health -= 3;
+            gl.player_invincible = 1;
+            gl.invincible_timer = 3;
+
+        }
+    }
+    for (int i = 0; i < g.nbullets; i++) {
+        Bullet *b = &g.barr[i];
+        float dx = b->pos[0] - wich.pos[0];
+        float dy = b->pos[1] - wich.pos[1];
+        float dist = sqrt(dx*dx + dy*dy);
+        float bullet_radius = 10.0f;
+        if (dist < (wich_radius + bullet_radius)) {
+            //delete bullet
+            memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
+            g.nbullets--;
+
+
+        }
+    }
+   // }
+}
+
 extern void tombstone_physics_on_slimes(Slime *s);
 extern void tombstone_physics();
 extern void witch_forest_physics();
@@ -1304,19 +1424,22 @@ void physics()
     }
 
     // If all slimes are destroyed, spawn a new wave
-    if (g.nslimes == 0 && (gl.current_level == 1 || gl.current_level == 4)) {
+    if (g.nslimes == 0 && (gl.current_level == 1)) {
         initSlimes();
     }
     update_medkit();
 	if (gl.current_level == 1)
         tombstone_physics();
     //&& (!gl.game_paused)
-    if ((gl.current_level == 1 || gl.current_level == 3))
+    if ((gl.current_level == 1))
         move_slimes();
     if (gl.current_level == 2)
         witch_forest_physics();
 //    if (gl.current_level == 1 || gl.current_level == 2)
 //        move_hat();
+    if (gl.current_level == 4)
+        witch_phys();
+
     if ((!gl.game_started)||(gl.current_level == 2))
         physics_hat();
 
@@ -1519,7 +1642,8 @@ if (gl.game_started) {
         r.left = 10;
         r.center = 0;
 
-        levelText(&r);
+        timeLeft(&r); // Current time left in level
+        levelText(&r); // Current Level Text
         ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
         ggprint8b(&r, 16, 0x00ffff00, "c for credits: ");
         ggprint8b(&r, 15, 0x00ffff00, "t for title");
@@ -1549,6 +1673,13 @@ if (gl.game_started) {
                 glAlphaFunc(GL_GREATER, 0.0f);
                 glColor4ub(255,255,255,255);
             }
+            
+            
+        if (gl.current_level == 4) {
+            glPushMatrix();
+            glBindTexture(GL_TEXTURE_2D, gl.witch_texture);
+            glTranslatef(wich.pos[0], wich.pos[1], wich.pos[2]);
+        }
 
             //glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
     // }
@@ -1664,6 +1795,5 @@ if (gl.game_started) {
     }
 //--------------------------------------------------------------------------
 
-    extern void drawSkeleton(); // Julio
 }
 }
