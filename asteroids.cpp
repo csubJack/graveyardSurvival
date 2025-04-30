@@ -116,7 +116,7 @@ public:
 
 Image img[6] = {
 "./images/hat.png",
-"./images/standing-still.png",
+"./images/standing-still2.png",
 "./images/houndDog2.png",
 "./images/pixel_skeleton.png",
 "./images/grass.png",
@@ -196,7 +196,7 @@ void buildSlimeFragment(Slime *ts, Slime *s)
 void initSlimes() 
 {
     if (gl.current_level == 1 || gl.current_level == 3) {
-        for (int i = 0; i < 5; i++) { // changed to zerof to remove slimes for movement testing
+        for (int i = 0; i < 1; i++) { // changed to zerof to remove slimes for movement testing
             Slime *s = new Slime;
             s->nverts = 8;
             s->radius = 30.0 + rnd() * 40.0; // size
@@ -239,6 +239,7 @@ void initSlimes()
     }
 }
 //=========================================================
+unsigned char *buildAlphaData(Image *img);
 
 GLuint playerTexture;
 // Jack
@@ -260,12 +261,14 @@ void loadPlayerIcon() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,img[1].width, img[1].height, 0,GL_RGB, GL_UNSIGNED_BYTE, img[1].data);	
+
+    unsigned char* rgbaData = buildAlphaData(&img[1]);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,img[1].width, img[1].height, 0,GL_RGBA, GL_UNSIGNED_BYTE, rgbaData);	
+    
 	
 }
 // Jack
-
-
 void renderPLayerIcon(float playerX, float playerY, float playerSize, float playerAngle) {
     gl.player_center_x = playerX;
     gl.player_center_y = playerY;
@@ -278,10 +281,13 @@ void renderPLayerIcon(float playerX, float playerY, float playerSize, float play
 	glTranslatef(playerX, playerY, 0.0f);
 
 	glRotatef(playerAngle, 0, 0, 1);
-
-    // glTranslatef(0.0f, -playerSize /2, 0.0f);
-
 	glBindTexture(GL_TEXTURE_2D, playerTexture);
+
+    glBindTexture(GL_TEXTURE_2D, gl.player_sil_texture);
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.0f);
+    glColor4ub(255,255,255,255);
+
 
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0f, 1.0f); glVertex2i(-playerSize / 2,-playerSize / 2);
@@ -291,7 +297,8 @@ void renderPLayerIcon(float playerX, float playerY, float playerSize, float play
 	glEnd();
 
 	glPopMatrix();    
-
+    glDisable(GL_BLEND);
+    
 }
 
 //X Windows variables
@@ -663,6 +670,8 @@ void init_opengl(void)
     glGenTextures(1, &gl.hat_silhouette_texture);
     glGenTextures(1, &gl.hound_texture);
     glGenTextures(1, &gl.witch_texture);
+    glGenTextures(1, &gl.player_texture);
+    glGenTextures(1, &gl.player_sil_texture);
 	loadPlayerIcon();
 
     //----------------------------------------------
@@ -690,6 +699,26 @@ void init_opengl(void)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
 								GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
 	free(silhouetteData);
+    //---------------------------------------------------------------
+    w = img[1].width;
+    h = img[1].height;
+    glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0,
+        GL_RGB, GL_UNSIGNED_BYTE, img[1].data);
+    //---------------------------------------------------------------
+    // silhouette
+    glBindTexture(GL_TEXTURE_2D, gl.player_sil_texture);
+	//
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	//
+	//must build a new set of data...
+	unsigned char *playerSilData = buildAlphaData(&img[1]);	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+								GL_RGBA, GL_UNSIGNED_BYTE,playerSilData);
+	free(playerSilData);
     //---------------------------------------------------------------
     // for the hound dog
     w = img[2].width;
@@ -1629,10 +1658,11 @@ if (gl.game_started) {
         stats.left = gl.xres-140;
         stats.center = 0;
         show_player_hearts(&stats, gl.yres);
+        draw_player_health_bar(g.ship.pos[0], g.ship.pos[1], gl.player_health, 10);
+
         show_score();
         renderPLayerIcon(g.ship.pos[0], g.ship.pos[1], 40.0, g.ship.angle);
-        
-        draw_player_health_bar(g.ship.pos[0], g.ship.pos[1], gl.player_health, 10);
+
         
     ///-----------------------------------------------
         float wid = 120.0f;
@@ -1644,9 +1674,7 @@ if (gl.game_started) {
 
         timeLeft(&r); // Current time left in level
         levelText(&r); // Current Level Text
-        ggprint8b(&r, 16, 0x00ffff00, "n bullets: %i", g.nbullets);
-        ggprint8b(&r, 16, 0x00ffff00, "c for credits: ");
-        ggprint8b(&r, 15, 0x00ffff00, "t for title");
+      
 
         if (gl.credits) {
             Rect credits_rect;
@@ -1792,6 +1820,9 @@ if (gl.game_started) {
     // Add slime count to UI
     if (!gl.game_paused) {
         ggprint8b(&r, 16, 0x00ffff00, "n slimes: %i", g.nslimes);
+        // ggprint8b(r, 24, 0xffffff00, bullets_accuracy_string_this_level);
+        ggprint8b(&r, 16, 0x00ffff00, "c for credits: ");
+        ggprint8b(&r, 15, 0x00ffff00, "t for title");
     }
 //--------------------------------------------------------------------------
 

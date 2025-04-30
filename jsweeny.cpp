@@ -56,6 +56,9 @@ void render_leaderboard_page(Rect *r)
 
 void show_player_hearts (Rect *r, int yres)
 {
+	// for (int i=0; i < gl.player_hearts; i++) {
+
+	// }
     r->bot = yres - 30;
 	char monsters_killed_this_level[100];
 	char bullets_accuracy_string_this_level[100];
@@ -70,6 +73,7 @@ void show_player_hearts (Rect *r, int yres)
 
 	sprintf(bullets_accuracy_string_this_level, "Accuracy: %f", bullets_accuracy_this_level);
 	ggprint8b(r, 24, 0xffffff00, bullets_accuracy_string_this_level);
+
 }
 
 float update_player_angle (float xCoordinate, float xPlayer,float yCoordinate, float yPlayer) 

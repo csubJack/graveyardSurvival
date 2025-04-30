@@ -54,6 +54,8 @@ class Global {
         GLuint grass_texture;
         GLuint hound_texture;
         GLuint hound_trans_texture;
+        GLuint player_texture;
+        GLuint player_sil_texture;
         float mouseXCoordinate;
         float mouseYCoordinate;
         int player_health;
