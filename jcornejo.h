@@ -5,4 +5,4 @@
 #include "global_game.h"
 
 void levelText(Rect *r);
-void timeLeft(Rect *r);
+void draw();

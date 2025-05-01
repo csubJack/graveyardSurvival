@@ -1486,62 +1486,8 @@ extern void show_title(Rect *r, int xres, int yres);
 extern void show_level_two(Rect *r, int xres, int yres);
 extern void levelText(Rect *r);
 //extern void show_score();
+extern void draw();
 
-
-void draw_ship() { 
-
-    glColor3fv(g.ship.color);
-    glPushMatrix();
-    glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
-    //-----------------------------------------------------
-    // I think this was part of the original code,
-    // but it's not being used for anything now
-    //
-    //float angle = atan2(g.ship.dir[1], g.ship.dir[0]);
-    //
-    //------------------------------------------------
-    glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
-    glBegin(GL_TRIANGLES);
-    glVertex2f(-10.0f, -10.0f);
-    glVertex2f(  0.0f, 20.0f);
-    glVertex2f( 10.0f, -10.0f);
-
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glVertex2f(-12.0f, -10.0f); // bottom left
-    glVertex2f(  0.0f,  20.0f); // top left
-    glVertex2f(  0.0f,  -10.0f); // bottom left center changing from -6 to -10
-    glVertex2f(  0.0f,  -10.0f); //bottom right center same as above
-    glVertex2f(  0.0f,  20.0f); // top right
-    glVertex2f( 12.0f, -10.0f); // bottom right
-    glEnd();
-    glColor3f(1.0f, 0.0f, 0.0f);
-    glBegin(GL_POINTS);
-    glVertex2f(0.0f, 0.0f);
-    glEnd();
-    glPopMatrix();
-    if (gl.keys[XK_Up] || g.mouseThrustOn) {
-        int i;
-        //draw thrust
-        Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
-        //convert angle to a vector
-        Flt xdir = cos(rad);
-        Flt ydir = sin(rad);
-        Flt xs,ys,xe,ye,r;
-        glBegin(GL_LINES);
-        for (i=0; i<16; i++) {
-            xs = -xdir * 11.0f + rnd() * 4.0 - 2.0;
-            ys = -ydir * 11.0f + rnd() * 4.0 - 2.0;
-            r = rnd()*40.0+40.0;
-            xe = -xdir * r + rnd() * 18.0 - 9.0;
-            ye = -ydir * r + rnd() * 18.0 - 9.0;
-            glColor3f(rnd()*.3+.7, rnd()*.3+.7, 0);
-            glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
-            glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
-        }
-        glEnd();
-    }
-
-}
 /*void level_two_render() 
 {
     Rect r;
@@ -1672,7 +1618,6 @@ if (gl.game_started) {
         r.left = 10;
         r.center = 0;
 
-        timeLeft(&r); // Current time left in level
         levelText(&r); // Current Level Text
       
 
