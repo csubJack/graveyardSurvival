@@ -179,7 +179,7 @@ void checking_level_transition()
 void change_grass_color()
 {
     if (gl.current_level == 1) 
-        glColor4f(0.5f, 1.0f, 0.5f, 1.0f);
+        glColor4f(0.0f, 0.5f, 1.0f, 1.0f);
     else if (gl.current_level == 2)
         glColor4f(0.9f, 0.8f, 1.0f, 1.0f);
     else if (gl.current_level == 3)
