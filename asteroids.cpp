@@ -627,7 +627,8 @@ void reset_game_animation() {
     g.nslimes = 0;
     initSlimes();
     integrateBossSystem();
-    move_hat(); 
+    move_hat();
+    hat.damage = 0; 
     
 }
 
@@ -1207,6 +1208,7 @@ void witch_phys()
 extern void tombstone_physics_on_slimes(Slime *s);
 extern void tombstone_physics();
 extern void witch_forest_physics();
+extern void witch_house_physics();
 void physics()
 {
 	//Update ship position
@@ -1466,6 +1468,8 @@ void physics()
         witch_forest_physics();
 //    if (gl.current_level == 1 || gl.current_level == 2)
 //        move_hat();
+    if (gl.current_level == 3)
+        witch_house_physics();
     if (gl.current_level == 4)
         witch_phys();
 

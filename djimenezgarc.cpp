@@ -475,16 +475,21 @@ void tombstone_physics()
             //break;
         }
         //------------- How Bullets React with Tombstones---------//
-        /*while (i < g.nbullets) {
-            Bullet *b = &g.barr[i];
-            Flt d0 = b->pos[0] - tomb_pos->x;
-            Flt d1 = b->pos[1] - tomb_pos->y;
-            Flt distance_bt = (d0 * d0 + d1 * d1);
-            if (distance_bt == 0) {
+        int j = 0;
+        while (j < g.nbullets) {
+            Bullet *b = &g.barr[j];
+            // Collision detection
+            if (b->pos[0] > tomb_pos->x &&
+                    b->pos[0] < tomb_pos->x + w &&
+                    b->pos[1] > tomb_pos->y &&
+                    b->pos[1] < tomb_pos->y + h) {
+                // now remove bullet
                 memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
-                    g.nbullets--;
-                    }
-        }*/
+                g.nbullets--;
+                continue;
+            }
+            ++j;
+        }
 
     }
 }
@@ -533,6 +538,7 @@ void witch_forest_physics()
                 }
             }
         }
+
         //-------------------------Leaves Collision------------------------//
         float leaves_width = w * 1.2f;
         float leaves_height = h * 0.5;
@@ -542,9 +548,52 @@ void witch_forest_physics()
                 && g.ship.pos[0] - gl.player_size < leaves_x + leaves_width
                 && g.ship.pos[1] + gl.player_size > leaves_y
                 && g.ship.pos[1] - gl.player_size < leaves_y + leaves_height) {
-            g.ship.vel[0] *= 0.5f;
-            g.ship.vel[1] *= 0.5f;
+            g.ship.vel[0] *= 0.25f;
+            g.ship.vel[1] *= 0.25f;
         }
+        //--------------------------Bullet-Trunk Collision----------------//
+        int j = 0;
+        while (j < g.nbullets) {
+            Bullet *b = &g.barr[j];
+            // Collision detection
+            if (b->pos[0] > tree_x &&
+                    b->pos[0] < tree_x + trunk_width &&
+                    b->pos[1] > tree_y &&
+                    b->pos[1] < tree_y + trunk_height) {
+                // now remove bullet
+                memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
+                g.nbullets--;
+                continue;
+            }
+            ++j;
+        }
+
+    }
+}
+void witch_house_physics()
+{
+    float house_x = 310.0f - 50.0f / 2.0f;
+    float house_y = 400.0f;
+    float house_width = 50.0f;
+    float house_height = 50.0f;
+    if (g.ship.pos[0] + gl.player_size > house_x &&
+            g.ship.pos[0] - gl.player_size < house_x + house_width &&
+            g.ship.pos[1] + gl.player_size > house_y &&
+            g.ship.pos[1] - gl.player_size < house_y + house_height) {
+        
+        g.ship.vel[0] = 0;
+        g.ship.vel[1] = 0;
+        
+        // dealing with collision
+        if (g.ship.pos[0] < house_x)
+            g.ship.pos[0] = house_x - gl.player_size;
+        else if (g.ship.pos[0] > house_x + house_width)
+            g.ship.pos[0] = house_x + house_width + gl.player_size;
+
+        if (g.ship.pos[1] < house_y)
+            g.ship.pos[1] = house_y - gl.player_size;
+        else if (g.ship.pos[1] > house_y + house_height)
+            g.ship.pos[1] = house_y + house_height + gl.player_size;
     }
 }
 void rendering_background() 
