@@ -543,7 +543,8 @@ void tombstone_physics()
                     b->pos[1] > tomb_pos->y &&
                     b->pos[1] < tomb_pos->y + h) {
                 // now remove bullet
-                memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
+                // memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet)); Changec i -> j due to segfault
+                memcpy(&g.barr[j], &g.barr[g.nbullets-1], sizeof(Bullet));
                 g.nbullets--;
                 continue;
             }
