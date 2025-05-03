@@ -67,8 +67,8 @@ void check_medkit_collision()
         return;
     
     // Calculate distance between player and med kit
-    float dx = g.ship.pos[0] - g.medkit.pos[0];
-    float dy = g.ship.pos[1] - g.medkit.pos[1];
+    float dx = g.player.pos[0] - g.medkit.pos[0];
+    float dy = g.player.pos[1] - g.medkit.pos[1];
     float distance = sqrt(dx*dx + dy*dy);
     
     // If player is close enough, restore health and deactivate med kit
@@ -317,8 +317,8 @@ void initSlimeBoss() {
     }
 
     // Set initial velocity toward player
-    float dx = g.ship.pos[0] - slimeBoss.pos[0];
-    float dy = g.ship.pos[1] - slimeBoss.pos[1];
+    float dx = g.player.pos[0] - slimeBoss.pos[0];
+    float dy = g.player.pos[1] - slimeBoss.pos[1];
     float dist = sqrt(dx*dx + dy*dy);
     if (dist > 0) {
         slimeBoss.vel[0] = dx/dist * 1.5f;
@@ -417,8 +417,8 @@ void slimeBossBounceAttack() {
         slimeBoss.isBouncing = true;
 
         // Target the player
-        float dx = g.ship.pos[0] - slimeBoss.pos[0];
-        float dy = g.ship.pos[1] - slimeBoss.pos[1];
+        float dx = g.player.pos[0] - slimeBoss.pos[0];
+        float dy = g.player.pos[1] - slimeBoss.pos[1];
         float dist = sqrt(dx*dx + dy*dy);
 
         if (dist > 0) {
@@ -481,8 +481,8 @@ void slimeBossAcidAttack() {
         s->color[2] = 0.1f;
 
         // Fire them toward player
-        float dx = g.ship.pos[0] - s->pos[0];
-        float dy = g.ship.pos[1] - s->pos[1];
+        float dx = g.player.pos[0] - s->pos[0];
+        float dy = g.player.pos[1] - s->pos[1];
         float dist = sqrt(dx*dx + dy*dy);
 
         if (dist > 0) {
@@ -521,8 +521,8 @@ void updateAcidPools() {
         }
 
         // Check if player is standing in acid
-        float dx = g.ship.pos[0] - acidPools[i].x;
-        float dy = g.ship.pos[1] - acidPools[i].y;
+        float dx = g.player.pos[0] - acidPools[i].x;
+        float dy = g.player.pos[1] - acidPools[i].y;
         float dist = sqrt(dx*dx + dy*dy);
 
         if (dist < acidPools[i].radius + gl.player_size) {
@@ -598,8 +598,8 @@ void updateSlimeBoss() {
             // Chase the player
             {
                 if (!gl.game_paused) {
-                    float dx = g.ship.pos[0] - slimeBoss.pos[0];
-                    float dy = g.ship.pos[1] - slimeBoss.pos[1];
+                    float dx = g.player.pos[0] - slimeBoss.pos[0];
+                    float dy = g.player.pos[1] - slimeBoss.pos[1];
                     float dist = sqrt(dx*dx + dy*dy);
 
                     // steer toward player
@@ -765,8 +765,8 @@ void updateSlimeBoss() {
     }
 
     // Check for collision with player (damage player)
-    float dx = g.ship.pos[0] - slimeBoss.pos[0];
-    float dy = g.ship.pos[1] - slimeBoss.pos[1];
+    float dx = g.player.pos[0] - slimeBoss.pos[0];
+    float dy = g.player.pos[1] - slimeBoss.pos[1];
     float dist = sqrt(dx*dx + dy*dy);
 
     if (dist < (slimeBoss.radius + gl.player_size)) {
@@ -779,8 +779,8 @@ void updateSlimeBoss() {
 
         // Knockback player
         if (dist > 0) {
-            g.ship.pos[0] += (dx/dist) * 20.0f;
-            g.ship.pos[1] += (dy/dist) * 20.0f;
+            g.player.pos[0] += (dx/dist) * 20.0f;
+            g.player.pos[1] += (dy/dist) * 20.0f;
         }
     }
 

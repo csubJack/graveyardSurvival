@@ -98,7 +98,7 @@ class Global {
         }
     };
     
-    class Ship {
+    class Player {
     public:
         Vec pos;
         Vec dir;
@@ -107,7 +107,7 @@ class Global {
         float angle;
         float color[3];
     public:
-        Ship() {
+     Player() {
             pos[0] = (Flt)(640/2); //xres 
             pos[1] = (Flt)(480/2); // yres
             pos[2] = 0.0f;
@@ -238,7 +238,7 @@ class Global {
     
     class Game {
     public:
-        Ship ship;
+     Player player;
       //  Witch witch;
         Bullet *barr;
         int nbullets;

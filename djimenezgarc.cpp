@@ -498,37 +498,37 @@ void tombstone_physics()
         float w, h;
         get_tombstone_size(tombstones[i].type, &w, &h);
         Tombstone *tomb_pos = &tombstones[i];
-        if (g.ship.pos[0] + gl.player_size > tomb_pos->x 
-                && g.ship.pos[0] - gl.player_size < tomb_pos->x + w 
-                && g.ship.pos[1] + gl.player_size > tomb_pos->y 
-                && g.ship.pos[1] - gl.player_size < tomb_pos->y + h) {
+        if (g.player.pos[0] + gl.player_size > tomb_pos->x 
+                && g.player.pos[0] - gl.player_size < tomb_pos->x + w 
+                && g.player.pos[1] + gl.player_size > tomb_pos->y 
+                && g.player.pos[1] - gl.player_size < tomb_pos->y + h) {
             // stop sliding
-            g.ship.vel[0] = 0;
-            g.ship.vel[1] = 0;
+            g.player.vel[0] = 0;
+            g.player.vel[1] = 0;
 
-            float d0 = g.ship.pos[0] - tomb_pos->x;
-            float d1 = g.ship.pos[1] - tomb_pos->y;
-            float distance_between_ship_tomb = sqrt(d0 * d0 + d1 * d1);
-            if (distance_between_ship_tomb > 0) {
+            float d0 = g.player.pos[0] - tomb_pos->x;
+            float d1 = g.player.pos[1] - tomb_pos->y;
+            float distance_between_player_tomb = sqrt(d0 * d0 + d1 * d1);
+            if (distance_between_player_tomb > 0) {
                 // Left side of tombstone (Player-tombstone collision)
-                if (g.ship.pos[0] + gl.player_size > tomb_pos->x
-                        && g.ship.pos[0] < tomb_pos->x) {
-                    g.ship.pos[0] = tomb_pos->x - gl.player_size;
+                if (g.player.pos[0] + gl.player_size > tomb_pos->x
+                        && g.player.pos[0] < tomb_pos->x) {
+                    g.player.pos[0] = tomb_pos->x - gl.player_size;
                 }
                 // Right side of tombstone
-                else if (g.ship.pos[0] - gl.player_size < tomb_pos->x + w
-                        && g.ship.pos[0] > tomb_pos->x + w) {
-                    g.ship.pos[0] = tomb_pos->x + w + gl.player_size;
+                else if (g.player.pos[0] - gl.player_size < tomb_pos->x + w
+                        && g.player.pos[0] > tomb_pos->x + w) {
+                    g.player.pos[0] = tomb_pos->x + w + gl.player_size;
                 }
                 // Top side of tombstone
-                else if (g.ship.pos[1] + gl.player_size > tomb_pos->y
-                        && g.ship.pos[1] < tomb_pos->y) {
-                    g.ship.pos[1] = tomb_pos->y - gl.player_size;
+                else if (g.player.pos[1] + gl.player_size > tomb_pos->y
+                        && g.player.pos[1] < tomb_pos->y) {
+                    g.player.pos[1] = tomb_pos->y - gl.player_size;
                 }
                 // Bottom side of tombstone
-                else if (g.ship.pos[1] - gl.player_size < tomb_pos->y + h
-                        && g.ship.pos[1] > tomb_pos->y + h) {
-                    g.ship.pos[1] = tomb_pos->y + h + gl.player_size;
+                else if (g.player.pos[1] - gl.player_size < tomb_pos->y + h
+                        && g.player.pos[1] > tomb_pos->y + h) {
+                    g.player.pos[1] = tomb_pos->y + h + gl.player_size;
                 }
             }
             //break;
@@ -567,34 +567,34 @@ void witch_forest_physics()
         float tree_x = tree_pos->x - trunk_width / 2;
         float tree_y = tree_pos->y;
 
-        if (g.ship.pos[0] + gl.player_size > tree_x
-                && g.ship.pos[0] - gl.player_size < tree_x + trunk_width
-                && g.ship.pos[1] + gl.player_size > tree_y
-                && g.ship.pos[1] - gl.player_size < tree_y + trunk_height) {
+        if (g.player.pos[0] + gl.player_size > tree_x
+                && g.player.pos[0] - gl.player_size < tree_x + trunk_width
+                && g.player.pos[1] + gl.player_size > tree_y
+                && g.player.pos[1] - gl.player_size < tree_y + trunk_height) {
 
             // stop movement
-            g.ship.vel[0] = 0;
-            g.ship.vel[1] = 0;
+            g.player.vel[0] = 0;
+            g.player.vel[1] = 0;
 
-            float d0 = g.ship.pos[0] - tree_pos->x;
-            float d1 = g.ship.pos[1] - tree_pos->y;
+            float d0 = g.player.pos[0] - tree_pos->x;
+            float d1 = g.player.pos[1] - tree_pos->y;
             float dist = sqrt(d0 * d0 + d1 * d1);
             if (dist > 0) {
-                if (g.ship.pos[0] + gl.player_size > tree_x
-                        && g.ship.pos[0] < tree_x) {
-                    g.ship.pos[0] = tree_x - gl.player_size;
+                if (g.player.pos[0] + gl.player_size > tree_x
+                        && g.player.pos[0] < tree_x) {
+                    g.player.pos[0] = tree_x - gl.player_size;
                 }
-                else if (g.ship.pos[0] - gl.player_size < tree_x + trunk_width
-                        && g.ship.pos[0] > tree_x + trunk_width) {
-                    g.ship.pos[0] = tree_x + trunk_width + gl.player_size;
+                else if (g.player.pos[0] - gl.player_size < tree_x + trunk_width
+                        && g.player.pos[0] > tree_x + trunk_width) {
+                    g.player.pos[0] = tree_x + trunk_width + gl.player_size;
                 }
-                else if (g.ship.pos[1] + gl.player_size > tree_y
-                        && g.ship.pos[1] < tree_y) {
-                    g.ship.pos[1] = tree_y - gl.player_size;
+                else if (g.player.pos[1] + gl.player_size > tree_y
+                        && g.player.pos[1] < tree_y) {
+                    g.player.pos[1] = tree_y - gl.player_size;
                 }
-                else if (g.ship.pos[1] - gl.player_size < tree_y + trunk_height
-                        && g.ship.pos[1] > tree_y + trunk_height) {
-                    g.ship.pos[1] = tree_y + trunk_height + gl.player_size;
+                else if (g.player.pos[1] - gl.player_size < tree_y + trunk_height
+                        && g.player.pos[1] > tree_y + trunk_height) {
+                    g.player.pos[1] = tree_y + trunk_height + gl.player_size;
                 }
             }
         }
@@ -604,12 +604,12 @@ void witch_forest_physics()
         float leaves_height = h * 0.5;
         float leaves_x = tree_pos->x - leaves_width / 2;
         float leaves_y = tree_pos->y + trunk_height;
-        if (g.ship.pos[0] + gl.player_size > leaves_x
-                && g.ship.pos[0] - gl.player_size < leaves_x + leaves_width
-                && g.ship.pos[1] + gl.player_size > leaves_y
-                && g.ship.pos[1] - gl.player_size < leaves_y + leaves_height) {
-            g.ship.vel[0] *= 0.25f;
-            g.ship.vel[1] *= 0.25f;
+        if (g.player.pos[0] + gl.player_size > leaves_x
+                && g.player.pos[0] - gl.player_size < leaves_x + leaves_width
+                && g.player.pos[1] + gl.player_size > leaves_y
+                && g.player.pos[1] - gl.player_size < leaves_y + leaves_height) {
+            g.player.vel[0] *= 0.25f;
+            g.player.vel[1] *= 0.25f;
         }
         //--------------------------Bullet-Trunk Collision----------------//
        // if (g.nbullets <= 0) return;
@@ -641,24 +641,24 @@ void witch_house_physics()
     float house_y = 400.0f;
     float house_width = 50.0f;
     float house_height = 50.0f;
-    if (g.ship.pos[0] + gl.player_size > house_x &&
-            g.ship.pos[0] - gl.player_size < house_x + house_width &&
-            g.ship.pos[1] + gl.player_size > house_y &&
-            g.ship.pos[1] - gl.player_size < house_y + house_height) {
+    if (g.player.pos[0] + gl.player_size > house_x &&
+            g.player.pos[0] - gl.player_size < house_x + house_width &&
+            g.player.pos[1] + gl.player_size > house_y &&
+            g.player.pos[1] - gl.player_size < house_y + house_height) {
         
-        g.ship.vel[0] = 0;
-        g.ship.vel[1] = 0;
+        g.player.vel[0] = 0;
+        g.player.vel[1] = 0;
         
         // dealing with collision
-        if (g.ship.pos[0] < house_x)
-            g.ship.pos[0] = house_x - gl.player_size;
-        else if (g.ship.pos[0] > house_x + house_width)
-            g.ship.pos[0] = house_x + house_width + gl.player_size;
+        if (g.player.pos[0] < house_x)
+            g.player.pos[0] = house_x - gl.player_size;
+        else if (g.player.pos[0] > house_x + house_width)
+            g.player.pos[0] = house_x + house_width + gl.player_size;
 
-        if (g.ship.pos[1] < house_y)
-            g.ship.pos[1] = house_y - gl.player_size;
-        else if (g.ship.pos[1] > house_y + house_height)
-            g.ship.pos[1] = house_y + house_height + gl.player_size;
+        if (g.player.pos[1] < house_y)
+            g.player.pos[1] = house_y - gl.player_size;
+        else if (g.player.pos[1] > house_y + house_height)
+            g.player.pos[1] = house_y + house_height + gl.player_size;
     }
 }
 void rendering_background() 

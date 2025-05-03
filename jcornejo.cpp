@@ -15,11 +15,11 @@ void levelText(Rect *r)
 
 void draw() { 
 
-    glColor3fv(g.ship.color);
+    glColor3fv(g.player.color);
     glPushMatrix();
-    glTranslatef(g.ship.pos[0], g.ship.pos[1], g.ship.pos[2]);
+    glTranslatef(g.player.pos[0], g.player.pos[1], g.player.pos[2]);
 
-    glRotatef(g.ship.angle, 0.0f, 0.0f, 1.0f);
+    glRotatef(g.player.angle, 0.0f, 0.0f, 1.0f);
     glBegin(GL_TRIANGLES);
     glVertex2f(-10.0f, -10.0f);
     glVertex2f(  0.0f, 20.0f);
@@ -41,7 +41,7 @@ void draw() {
     if (gl.keys[XK_Up] || g.mouseThrustOn) {
         int i;
         //draw thrust
-        Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+        Flt rad = ((g.player.angle+90.0) / 360.0f) * PI * 2.0;
         //convert angle to a vector
         Flt xdir = cos(rad);
         Flt ydir = sin(rad);
@@ -54,8 +54,8 @@ void draw() {
             xe = -xdir * r * 18.0 - 9.0;
             ye = -ydir * r * 18.0 - 9.0;
             glColor3f(.3+.7, .3+.7, 0);
-            glVertex2f(g.ship.pos[0]+xs,g.ship.pos[1]+ys);
-            glVertex2f(g.ship.pos[0]+xe,g.ship.pos[1]+ye);
+            glVertex2f(g.player.pos[0]+xs,g.player.pos[1]+ys);
+            glVertex2f(g.player.pos[0]+xe,g.player.pos[1]+ye);
         }
         glEnd();
     }

@@ -81,7 +81,7 @@ float update_player_angle (float xCoordinate, float xPlayer,float yCoordinate, f
 	float x = xCoordinate - xPlayer;
 	float y = yCoordinate - yPlayer;
 	return atan2(x,y) * (180 / M_PI) + 180;
-	// std::cout << g.ship.angle << std::endl;
+	// std::cout << g.player.angle << std::endl;
 }
 void reset_game_stats () 
 {
@@ -169,8 +169,8 @@ void handle_shot( int &lastShot)
 {
 	if (!gl.game_paused && !gl.game_over_screen) {
 		Bullet &b = g.barr[g.nbullets];
-	// 	//convert ship angle to radians
-		Flt rad = ((g.ship.angle+90.0) / 360.0f) * PI * 2.0;
+	// 	//convert player angle to radians
+		Flt rad = ((g.player.angle+90.0) / 360.0f) * PI * 2.0;
 		//convert angle to a vector
 		Flt xdir = cos(rad);
 		Flt ydir = sin(rad);
@@ -183,10 +183,10 @@ void handle_shot( int &lastShot)
 		if (lastShot == 0) {
 			// Right pistol shoots
 
-			b.pos[0] = g.ship.pos[0] + (sideX * rightOffset);
-			b.pos[1] = g.ship.pos[1] + (sideY * rightOffset);
-			b.vel[0] = g.ship.vel[0];
-			b.vel[1] = g.ship.vel[1];
+			b.pos[0] = g.player.pos[0] + (sideX * rightOffset);
+			b.pos[1] = g.player.pos[1] + (sideY * rightOffset);
+			b.vel[0] = g.player.vel[0];
+			b.vel[1] = g.player.vel[1];
 			b.vel[0] += xdir*6.0f;
 			b.vel[1] += ydir*6.0f;
 			lastShot = 1;
@@ -194,10 +194,10 @@ void handle_shot( int &lastShot)
 		} else {
 			// Left pistol shoots
 			
-			b.pos[0] = g.ship.pos[0] + (sideX * leftOffset);
-			b.pos[1] = g.ship.pos[1] + (sideY * leftOffset);
-			b.vel[0] = g.ship.vel[0];
-			b.vel[1] = g.ship.vel[1];
+			b.pos[0] = g.player.pos[0] + (sideX * leftOffset);
+			b.pos[1] = g.player.pos[1] + (sideY * leftOffset);
+			b.vel[0] = g.player.vel[0];
+			b.vel[1] = g.player.vel[1];
 		
 			b.vel[0] += xdir*6.0f;
 			b.vel[1] += ydir*6.0f;
@@ -319,8 +319,8 @@ void delete_all_slimes(Slime *node)
 }
 void nuke_collision() 
 {
-	float distance_x = g.ship.pos[0] - g.nuke.x_coordinate;
-	float distance_y = g.ship.pos[1] - g.nuke.y_coordinate;
+	float distance_x = g.player.pos[0] - g.nuke.x_coordinate;
+	float distance_y = g.player.pos[1] - g.nuke.y_coordinate;
 
 	float total_distance = sqrt(distance_x * distance_x  + distance_y * distance_y);
 
