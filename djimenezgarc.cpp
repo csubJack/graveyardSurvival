@@ -265,7 +265,6 @@ Tree witch[] = {
     {800, 550, WITCH_TREE},
     {900, 600, WITCH_TREE},
     {700, 500, WITCH_TREE},
-    // extending the trees
     {800, 300, GRAVEYARD_TREE},
     {400, 500, GRAVEYARD_TREE},
     {600, 600, GRAVEYARD_TREE},
@@ -612,7 +611,7 @@ void witch_forest_physics()
             g.ship.vel[1] *= 0.25f;
         }
         //--------------------------Bullet-Trunk Collision----------------//
-        if (g.nbullets <= 0) return;
+       // if (g.nbullets <= 0) return;
         int j = 0;
         while (j < g.nbullets) {
             Bullet *b = &g.barr[j];

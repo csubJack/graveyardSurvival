@@ -1606,13 +1606,13 @@ if (gl.current_level != previous_level) {
     }
 
     // If all slimes are destroyed, spawn a new wave
-<<<<<<< HEAD
-    if (g.nslimes == 0 && (gl.current_level == 1)) {
-        initSlimes();
-=======
+//<<<<<<< HEAD
+//    if (g.nslimes == 0 && (gl.current_level == 1)) {
+  //      initSlimes();
+//=======
     if (count_slimes() == 0 && (gl.current_level == 1 || gl.current_level == 4)) {
     initSlimes();
->>>>>>> zombie-feature
+//>>>>>>> zombie-feature
     }
 
     update_medkit();
@@ -2020,8 +2020,8 @@ if (gl.game_started) {
     }
 //--------------------------------------------------------------------------
 
-<<<<<<< HEAD
-=======
+//<<<<<<< HEAD
+//=======
 
 
         for (int i = 0; i < MAX_ZOMBIES; i++) {
@@ -2093,6 +2093,6 @@ ggprint8b(&r, 16, 0x00ff8800, "Zombies Active: %i", activeZombies);
 
 
     extern void drawSkeleton(); // Julio
->>>>>>> zombie-feature
+//>>>>>>> zombie-feature
 }
 }
