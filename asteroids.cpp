@@ -135,6 +135,24 @@ Witch wich;
 
 //================Slime Enemy==============================
 // deleting slime from the linked list
+int previous_level = -1;
+
+bool zombie_wave_spawned = false;
+bool second_wave_spawned = false;
+
+#define MAX_ZOMBIES 10
+
+struct Zombie {
+    Vec pos;
+    Vec vel;
+    float speed;
+    bool active;
+};
+
+Zombie zombies[MAX_ZOMBIES];
+
+
+
 void deleteSlime(Slime *node)
 {
     // remove node from doubly-linked list
@@ -192,6 +210,18 @@ void buildSlimeFragment(Slime *ts, Slime *s)
     ts->vel[0] = s->vel[0] + (rnd()*1.0-0.5);  // Was 2.0-1.0
     ts->vel[1] = s->vel[1] + (rnd()*1.0-0.5);
 }
+
+
+int count_slimes() {
+    int count = 0;
+    Slime *s = g.slimeHead;
+    while (s) {
+        count++;
+        s = s->next;
+    }
+    return count;
+}
+
 
 void initSlimes() 
 {
@@ -438,6 +468,8 @@ void check_mouse(XEvent *e);
 int check_keys(XEvent *e);
 void physics();
 void render();
+void normalize2d(Vec v);
+int count_slimes();
 void title_render();
 void game_over(Rect *r, float xres, float yres);
 void render_pause_screen(Rect *r);
@@ -463,11 +495,58 @@ void nuke_collision();
 // animation rest
 void reset_game_animation();
 void reset_title_animation();
+
+void spawnZombie() {
+    for (int i = 0; i < MAX_ZOMBIES; i++) {
+        if (!zombies[i].active) {
+            zombies[i].active = true;
+
+            int side = rand() % 4;
+            float x, y;
+            
+            if (side == 0) { // Left
+             x = -50; // Offscreen left
+             y = rand() % (gl.yres + 1);
+            } else if (side == 1) { // Right
+             x = gl.xres + 50; // Offscreen right
+             y = rand() % (gl.yres + 1);
+            } else if (side == 2) { // Bottom
+             x = rand() % (gl.xres + 1);
+             y = -50; // Offscreen bottom
+            } else { // Top
+             x = rand() % (gl.xres + 1);
+             y = gl.yres + 50; // Offscreen top
+            }
+
+
+            
+            MakeVector(x, y, 0.0, zombies[i].pos);
+
+            Vec dir;
+            VecSub(g.ship.pos, zombies[i].pos, dir);
+            normalize2d(dir);
+            MakeVector(dir[0] * 2.0, dir[1] * 2.0, 0.0, zombies[i].vel);
+            break;
+        }
+    }
+}
+
+
 //==========================================================================
 // M A I N
 //==========================================================================
-int main()
-{
+int main() {
+    logOpen();
+    init_opengl();
+
+    for (int i = 0; i < MAX_ZOMBIES; i++)
+        zombies[i].active = false;
+
+    for (int i = 0; i < 3; i++) {
+        spawnZombie();
+    }
+
+
 	logOpen();
 	init_opengl();
     //checking_invincible_timer();
@@ -537,8 +616,32 @@ int main()
             gl.game_over_screen = 1;
             integrateBossSystem();
             gl.current_level = 1;
-            game_over(&r, gl.xres, gl.yres);
+    // -- RESET ZOMBIES ON LEVEL TRANSITION --
+    for (int i = 0; i < MAX_ZOMBIES; i++) {
+        zombies[i].active = false;
+    }   
 
+if (gl.current_level == 1) {
+    for (int i = 0; i < 3; i++) {
+        spawnZombie();
+    }
+    zombie_wave_spawned = true;
+    second_wave_spawned = false;
+}
+else if (gl.current_level == 4) {
+    for (int i = 0; i < 5; i++) {
+        spawnZombie();
+    }
+    zombie_wave_spawned = false;
+    second_wave_spawned = false;
+}
+else {
+    zombie_wave_spawned = false;
+    second_wave_spawned = false;
+}
+
+
+        game_over(&r, gl.xres, gl.yres);
         }
         // used to be !gl.game_started
 		if (gl.title_screen) {
@@ -626,6 +729,25 @@ void reset_game_animation() {
     }
     g.nslimes = 0;
     initSlimes();
+    g.nslimes = count_slimes();
+
+
+    for (int i = 0; i < MAX_ZOMBIES; i++) {
+    zombies[i].active = false;
+}
+
+if (gl.current_level == 1 || gl.current_level == 4) {
+    for (int i = 0; i < 3; i++) {
+        spawnZombie();
+    }
+    zombie_wave_spawned = true;
+    second_wave_spawned = false;
+} else {
+    zombie_wave_spawned = false;
+    second_wave_spawned = false;
+}
+
+
     integrateBossSystem();
     move_hat();
     hat.damage = 0; 
@@ -1209,13 +1331,42 @@ extern void tombstone_physics_on_slimes(Slime *s);
 extern void tombstone_physics();
 extern void witch_forest_physics();
 extern void witch_house_physics();
+
+
+
+
+
 void physics()
 {
 	//Update ship position
 	g.ship.pos[0] += g.ship.vel[0];
 	g.ship.pos[1] += g.ship.vel[1];
 
-    
+
+// --- Force zombie reset if level changed ---
+static int previous_level = -1;
+if (gl.current_level != previous_level) {
+    // Clear all zombies
+    for (int i = 0; i < MAX_ZOMBIES; i++) {
+        zombies[i].active = false;
+    }
+
+    // Only spawn if we're on level 1 or 4
+    if (gl.current_level == 1 || gl.current_level == 4) {
+        for (int i = 0; i < 3; i++) {
+            spawnZombie();
+        }
+        zombie_wave_spawned = true;
+        second_wave_spawned = false;
+    } else {
+        zombie_wave_spawned = false;
+        second_wave_spawned = false;
+    }
+
+    previous_level = gl.current_level; // Update tracker
+}
+
+
     // Add this new logic:
     if (g.ship.pos[0] < 0.0) {
         g.ship.pos[0] = 0.0; // Stop at the left edge
@@ -1455,9 +1606,15 @@ void physics()
     }
 
     // If all slimes are destroyed, spawn a new wave
+<<<<<<< HEAD
     if (g.nslimes == 0 && (gl.current_level == 1)) {
         initSlimes();
+=======
+    if (count_slimes() == 0 && (gl.current_level == 1 || gl.current_level == 4)) {
+    initSlimes();
+>>>>>>> zombie-feature
     }
+
     update_medkit();
 	if (gl.current_level == 1)
         tombstone_physics();
@@ -1477,7 +1634,95 @@ void physics()
         physics_hat();
 
     updateSlimeBoss();
+
+// ================= Zombie collision with bullets =================
+for (int i = 0; i < MAX_ZOMBIES; i++) {
+    if (!zombies[i].active) continue;
+
+    for (int j = 0; j < g.nbullets; j++) {
+        Bullet *b = &g.barr[j];
+        float dx = b->pos[0] - zombies[i].pos[0];
+        float dy = b->pos[1] - zombies[i].pos[1];
+        float dist = sqrt(dx * dx + dy * dy);
+        float zombie_radius = 20.0f;
+
+        if (dist < zombie_radius) {
+            // Kill zombie
+            zombies[i].active = false;
+
+            // Remove bullet
+            g.barr[j] = g.barr[g.nbullets - 1];
+            g.nbullets--;
+
+            break; // stop checking this zombie for other bullets
+        }
+    }
 }
+
+
+    // ================= Zombie Movement =================
+for (int i = 0; i < MAX_ZOMBIES; i++) {
+    if (zombies[i].active) {
+        zombies[i].pos[0] += zombies[i].vel[0];
+        zombies[i].pos[1] += zombies[i].vel[1];
+
+        Vec dir;
+        VecSub(g.ship.pos, zombies[i].pos, dir);
+        normalize2d(dir);
+        MakeVector(dir[0] * 0.5, dir[1] * 0.5, 0.0, zombies[i].vel);
+
+        if (zombies[i].pos[0] < -50 || zombies[i].pos[0] > gl.xres + 50 ||
+            zombies[i].pos[1] < -50 || zombies[i].pos[1] > gl.yres + 50) {
+            zombies[i].active = false;
+        }
+    }
+}
+
+
+// ================= Zombie collision with player =================
+for (int i = 0; i < MAX_ZOMBIES; i++) {
+    if (zombies[i].active) {
+        float dx = g.ship.pos[0] - zombies[i].pos[0];
+        float dy = g.ship.pos[1] - zombies[i].pos[1];
+        float dist = sqrt(dx*dx + dy*dy);
+        float zombie_radius = 20.0f;
+        float player_radius = gl.player_size;
+
+        if (dist < (zombie_radius + player_radius)) {
+            if (!gl.player_invincible) {
+                gl.player_health -= 2;
+                gl.player_invincible = 1;
+                gl.invincible_timer = 3;
+            }
+        }
+    }
+}
+
+
+
+// === Zombie wave control (fixed logic) ===
+if ((gl.current_level == 1 || gl.current_level == 4) &&
+    zombie_wave_spawned && !second_wave_spawned) {
+    int zombies_alive = 0;
+    for (int z = 0; z < MAX_ZOMBIES; z++) {
+        if (zombies[z].active)
+            zombies_alive++;
+    }
+
+    if (zombies_alive == 0) {
+        // All zombies from first wave are gone
+        for (int z = 0; z < 3; z++) {
+            spawnZombie();
+        }
+        second_wave_spawned = true;
+        printf("Second zombie wave incoming...\n");
+    }
+}
+
+}
+
+
+
 
 
 // added int xres and int yres so as to not cluter anything up here
@@ -1775,5 +2020,79 @@ if (gl.game_started) {
     }
 //--------------------------------------------------------------------------
 
+<<<<<<< HEAD
+=======
+
+
+        for (int i = 0; i < MAX_ZOMBIES; i++) {
+    if (zombies[i].active) {
+        glPushMatrix();
+        glTranslatef(zombies[i].pos[0], zombies[i].pos[1], 0.0f);
+
+        float radius = 22.0f;
+
+        // === BODY (mutant slime style) ===
+        glColor3f(0.5f, 0.0f, 0.0f); // deep red
+        glBegin(GL_POLYGON);
+        for (int j = 0; j < 20; j++) {
+            float angle = 2.0f * PI * j / 20.0f;
+            float r = radius + (j % 2 == 0 ? 2.5f : -1.5f); // wobble
+            glVertex2f(cos(angle) * r, sin(angle) * r);
+        }
+        glEnd();
+
+        // === EYES ===
+        glColor3f(1.0f, 0.0f, 0.0f); // glowing red eyes
+        glBegin(GL_QUADS);
+        glVertex2f(-6, 6); glVertex2f(-4, 6);
+        glVertex2f(-4, 8); glVertex2f(-6, 8);
+
+        glVertex2f(4, 6); glVertex2f(6, 6);
+        glVertex2f(6, 8); glVertex2f(4, 8);
+        glEnd();
+
+        // === MOUTH ===
+        glColor3f(0.0f, 0.0f, 0.0f);
+        glBegin(GL_LINE_STRIP);
+        glVertex2f(-6, -4);
+        glVertex2f(-4, -6);
+        glVertex2f(-2, -4);
+        glVertex2f(0, -6);
+        glVertex2f(2, -4);
+        glVertex2f(4, -6);
+        glVertex2f(6, -4);
+        glEnd();
+
+        // === Tiny Claw Arms ===
+        glColor3f(0.3f, 0.0f, 0.0f);
+        glBegin(GL_QUADS);
+        // Left claw
+        glVertex2f(-14, 0);
+        glVertex2f(-12, 0);
+        glVertex2f(-12, 4);
+        glVertex2f(-14, 4);
+        // Right claw
+        glVertex2f(12, 0);
+        glVertex2f(14, 0);
+        glVertex2f(14, 4);
+        glVertex2f(12, 4);
+        glEnd();
+
+        glPopMatrix();
+    }
+}
+
+
+       int activeZombies = 0;
+for (int i = 0; i < MAX_ZOMBIES; i++) {
+    if (zombies[i].active)
+        activeZombies++;
+}
+ggprint8b(&r, 16, 0x00ff8800, "Zombies Active: %i", activeZombies);
+
+
+
+    extern void drawSkeleton(); // Julio
+>>>>>>> zombie-feature
 }
 }
