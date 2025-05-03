@@ -65,10 +65,12 @@ class Global {
         vector <pair<int, string>> top_scores;
         bool leaderboard_screen;
         bool nuke_active;
-        
+        //int false_start; 
         Global() {
-            xres = 640;
-            yres = 480;
+            //960 640
+            //// 720 480
+            xres = 960;
+            yres = 720;
             memset(keys, 0, 65536);
             mouse_cursor_on = 1;
             credits = 0;

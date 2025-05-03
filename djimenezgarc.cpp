@@ -200,12 +200,48 @@ Tombstone tombstones[] = {
     {223, 0, TOMBSTONE_THIN},
     {250, 0, TOMBSTONE_CHUNKY},
     {250, 400, TOMBSTONE_CHUNKY},
+    {100, 400, TOMBSTONE_NORMAL},
+    {150, 400, TOMBSTONE_NORMAL},
+    {50, 400, TOMBSTONE_NORMAL},
+    {370, 400, TOMBSTONE_NORMAL},
+    {500, 400, TOMBSTONE_CHUNKY},
+    {640, 400, TOMBSTONE_CHUNKY},
+    {500, 600, TOMBSTONE_CHUNKY},
+    {640, 600, TOMBSTONE_CHUNKY},
     {375, 0, TOMBSTONE_THIN},
     {415, 0, TOMBSTONE_THIN},
     {455, 0, TOMBSTONE_THIN},
     {500, 0, TOMBSTONE_SHORTWIDE},
     {500, 200, TOMBSTONE_SHORTWIDE},
+    {580, 200, TOMBSTONE_SHORTWIDE},
+    {420, 200, TOMBSTONE_SHORTWIDE},
     {560, 0, TOMBSTONE_SHORTWIDE},
+    {650, 0, TOMBSTONE_CHUNKY},
+    {700, 200, TOMBSTONE_CHUNKY},
+    {250, 200, TOMBSTONE_THIN},
+    {300, 200, TOMBSTONE_THIN},
+    {850, 200, TOMBSTONE_THIN},
+    {900, 200, TOMBSTONE_THIN},
+    {900, 500, TOMBSTONE_THIN},
+    {800, 500, TOMBSTONE_THIN},
+    {875, 400, TOMBSTONE_THIN},
+    {825, 400, TOMBSTONE_THIN},
+    {875, 600, TOMBSTONE_THIN},
+    {825, 600, TOMBSTONE_THIN},
+    {760, 0, TOMBSTONE_THIN},
+    {790, 0, TOMBSTONE_THIN},
+    {820, 0, TOMBSTONE_THIN},
+    {850, 0, TOMBSTONE_NORMAL},
+    {900, 0, TOMBSTONE_NORMAL},  
+    {0, 600, TOMBSTONE_SHORTWIDE},
+    {60, 600, TOMBSTONE_SHORTWIDE},
+    {120, 600, TOMBSTONE_SHORTWIDE},
+    {180, 600, TOMBSTONE_SHORTWIDE},
+    {0, 500, TOMBSTONE_SHORTWIDE},
+    {60, 500, TOMBSTONE_SHORTWIDE},
+    {120, 500, TOMBSTONE_SHORTWIDE},
+    {180, 500, TOMBSTONE_SHORTWIDE},
+
 };
 Tree witch[] = {
     {100, 0, WITCH_TREE},
@@ -213,12 +249,32 @@ Tree witch[] = {
     {50, 400, WITCH_TREE},
     {150, 250, WITCH_TREE},
     {220, 600, WITCH_TREE},
+    {300, 450, WITCH_TREE},
+    {20, 650, WITCH_TREE},
+    {100, 500, WITCH_TREE},
     {500, 0, WITCH_TREE},
     {350, 110, WITCH_TREE},
     {600, 310, WITCH_TREE},
     {450, 210, WITCH_TREE},
     {300, 300, WITCH_TREE},
+    {520, 440, WITCH_TREE},
+    {750, 200, WITCH_TREE},
+    {600, 800, WITCH_TREE},
+    {700, 800, WITCH_TREE},
+    {650, 0, WITCH_TREE},
+    {800, 550, WITCH_TREE},
+    {900, 600, WITCH_TREE},
+    {700, 500, WITCH_TREE},
+    // extending the trees
+    {800, 300, GRAVEYARD_TREE},
+    {400, 500, GRAVEYARD_TREE},
+    {600, 600, GRAVEYARD_TREE},
+    {800, 0, GRAVEYARD_TREE},
 };
+// WITCH_TREE,
+//        GRAVEYARD_TREE,
+//        LEVEL_THREE_TREE
+
 int num_tombstones = sizeof(tombstones) / sizeof(Tombstone);
 int num_witch_items = sizeof(witch) / sizeof(Tree);
 
@@ -255,6 +311,10 @@ void get_tree_size(TreeType type, float *width, float *height)
         case WITCH_TREE:
             *width = 100;
             *height = 100;
+            break;
+        case GRAVEYARD_TREE:
+            *width = 200;
+            *height = 200;
             break;
         default:
             *width = 100;
@@ -552,6 +612,7 @@ void witch_forest_physics()
             g.ship.vel[1] *= 0.25f;
         }
         //--------------------------Bullet-Trunk Collision----------------//
+        if (g.nbullets <= 0) return;
         int j = 0;
         while (j < g.nbullets) {
             Bullet *b = &g.barr[j];
@@ -561,13 +622,17 @@ void witch_forest_physics()
                     b->pos[1] > tree_y &&
                     b->pos[1] < tree_y + trunk_height) {
                 // now remove bullet
-                memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet));
+                memcpy(&g.barr[j], &g.barr[g.nbullets-1], sizeof(Bullet));
                 g.nbullets--;
-                continue;
-            }
-            ++j;
+               // continue;
+               if (j !=  g.nbullets) {
+                    memcpy(&g.barr[j], &g.barr[g.nbullets-1], sizeof(Bullet));
+               }
+            } //else {
+             //   ++j;
+           // }
+        ++j;
         }
-
     }
 }
 void witch_house_physics()
