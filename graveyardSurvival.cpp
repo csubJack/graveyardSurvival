@@ -437,7 +437,7 @@ public:
 		XWarpPointer(dpy, None, win, 0, 0, 0, 0, x, y);
 	}
 	void show_mouse_cursor(const int onoff) {
-		printf("show_mouse_cursor(%i)\n", onoff); fflush(stdout);
+		//printf("show_mouse_cursor(%i)\n", onoff); fflush(stdout);
 		if (onoff) {
 			//this removes our own blank cursor.
 			XUndefineCursor(dpy, win);
@@ -1324,17 +1324,12 @@ void witch_phys()
 
         }
     }
-   // }
 }
 
 extern void tombstone_physics_on_slimes(Slime *s);
 extern void tombstone_physics();
 extern void witch_forest_physics();
 extern void witch_house_physics();
-
-
-
-
 
 void physics()
 {
@@ -1606,25 +1601,19 @@ if (gl.current_level != previous_level) {
     }
 
     // If all slimes are destroyed, spawn a new wave
-//<<<<<<< HEAD
 //    if (g.nslimes == 0 && (gl.current_level == 1)) {
   //      initSlimes();
-//=======
     if (count_slimes() == 0 && (gl.current_level == 1 || gl.current_level == 4)) {
     initSlimes();
-//>>>>>>> zombie-feature
     }
 
     update_medkit();
 	if (gl.current_level == 1)
         tombstone_physics();
-    //&& (!gl.game_paused)
     if ((gl.current_level == 1))
         move_slimes();
     if (gl.current_level == 2)
         witch_forest_physics();
-//    if (gl.current_level == 1 || gl.current_level == 2)
-//        move_hat();
     if (gl.current_level == 3)
         witch_house_physics();
     if (gl.current_level == 4)
@@ -1715,22 +1704,17 @@ if ((gl.current_level == 1 || gl.current_level == 4) &&
             spawnZombie();
         }
         second_wave_spawned = true;
-        printf("Second zombie wave incoming...\n");
+        //printf("Second zombie wave incoming...\n");
     }
 }
 
 }
-
-
-
-
 
 // added int xres and int yres so as to not cluter anything up here
 //  and instead did all the work in another file
 extern void show_all(Rect *r, int xres, int yres,
  float delta_time, int credits_activation);
 extern void show_title(Rect *r, int xres, int yres);
-//extern void draw_Iris();
 // same thing here removing parameters Rect *r,int xres, int yres
 extern void show_level_two(Rect *r, int xres, int yres);
 extern void levelText(Rect *r);
@@ -1771,7 +1755,6 @@ void title_render()
         }
 
         /// ----------------------------------------------
-        //glBindTexture(GL_TEXTURE_2D, gl.hat_texture);
     }
     glBegin(GL_QUADS);
     if(g.player.vel[0] > 0.0) {
@@ -1794,7 +1777,7 @@ void title_render()
 }
 
 extern void change_grass_color();
-//extern void tombstone_physics();
+
 void render()
 {
         
@@ -1818,10 +1801,7 @@ if (gl.game_started) {
                 glTexCoord2f(1.0f, 0.0f); glVertex2i(gl.xres, gl.yres);
                 glTexCoord2f(1.0f, 1.0f); glVertex2i(gl.xres, 0);
             glEnd();
-            //glDisable(GL_TEXTURE_2D);
         }
-        //glEnable(GL_TEXTURE_2D);
-        //check_level_change_color();
         rendering_background();
         stats.bot = 0;
         stats.left = gl.xres-140;
@@ -1833,10 +1813,9 @@ if (gl.game_started) {
         renderPLayerIcon(g.player.pos[0], g.player.pos[1], 40.0, g.player.angle);
 
         
-    ///-----------------------------------------------
         float wid = 120.0f;
         float scale =  1.0 - hat.damage;
-    ////---------------------------------------------
+        
         r.bot = gl.yres - 20;
         r.left = 10;
         r.center = 0;
@@ -1906,7 +1885,7 @@ if (gl.game_started) {
 
     }
 	
-	//-------------------------------------------------------------------------
+	//-----------------------------------------------------------------------
 	//Draw the bullets
     glDisable(GL_TEXTURE_2D);
     glColor3f(1.0, 1.0, 1.0);
@@ -1995,11 +1974,7 @@ if (gl.game_started) {
         ggprint8b(&r, 16, 0x00ffff00, "c for credits: ");
         ggprint8b(&r, 15, 0x00ffff00, "t for title");
     }
-//--------------------------------------------------------------------------
-
-//<<<<<<< HEAD
-//=======
-
+//-----------------------------Zombies-----------------------------------//
 
         for (int i = 0; i < MAX_ZOMBIES; i++) {
             if (zombies[i].active && !gl.game_paused) {
@@ -2057,10 +2032,8 @@ if (gl.game_started) {
 
                 glPopMatrix();
             }
-}
-
-
-       int activeZombies = 0;
+        }
+int activeZombies = 0;
 for (int i = 0; i < MAX_ZOMBIES; i++) {
     if (zombies[i].active)
         activeZombies++;
@@ -2068,10 +2041,6 @@ for (int i = 0; i < MAX_ZOMBIES; i++) {
 if (!gl.game_paused) {
     ggprint8b(&r, 16, 0x00ff8800, "Zombies Active: %i", activeZombies);
 }
-
-
-
     extern void drawSkeleton(); // Julio
-//>>>>>>> zombie-feature
 }
 }

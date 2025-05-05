@@ -83,8 +83,8 @@ void show_title(Rect *r, int xres, int yres)
     r->bot = yres / 2 + 30;
     ggprint12(r, 24, 0xffffffff, "Press space to start");
     r->bot = yres / 2 - 30;
-    ggprint8b(r, 16, 0x00ff00ff, "WAS to move");
-    ggprint8b(r, 16, 0x00ff00ff, "space to fire");
+    ggprint8b(r, 16, 0x00ff00ff, "WAD to move");
+    ggprint8b(r, 16, 0x00ff00ff, "Left Click to fire");
 }
 
 extern void levelText (Rect  *r);

@@ -325,7 +325,7 @@ void nuke_collision()
 	float total_distance = sqrt(distance_x * distance_x  + distance_y * distance_y);
 
 	if (total_distance < (g.nuke.radius + gl.player_size) ) {
-		cout << "nuke collision" << endl;
+	//	cout << "nuke collision" << endl;
 		g.nuke.nuke_active = false;
 		// g.nslimes = 0;
 		int i=0;
