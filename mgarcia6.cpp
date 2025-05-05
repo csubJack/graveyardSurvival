@@ -859,7 +859,6 @@ void renderSlimeBoss() {
         // pulsing text
         float pulse = 0.7f + 0.3f * sin(bossWarningTimer * 5.0f);
         int color = (int)(pulse * 255) << 16 | (int)(pulse * 100) << 8;
-
         ggprint16(&r, 0, color, "WARNING: SLIME KING APPROACHING!");
     }
 

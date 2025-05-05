@@ -1662,7 +1662,7 @@ for (int i = 0; i < MAX_ZOMBIES; i++) {
 
     // ================= Zombie Movement =================
 for (int i = 0; i < MAX_ZOMBIES; i++) {
-    if (zombies[i].active) {
+    if (zombies[i].active && !gl.game_paused) {
         zombies[i].pos[0] += zombies[i].vel[0];
         zombies[i].pos[1] += zombies[i].vel[1];
 
@@ -1737,14 +1737,6 @@ extern void levelText(Rect *r);
 //extern void show_score();
 extern void draw();
 
-/*void level_two_render() 
-{
-    Rect r;
-    show_level_two(&r, gl.xres, gl.yres);
-    //draw_Iris(); // removing the gl's
-   //&r, gl.xres, gl.yres)
-}
-*/
 void title_render() 
 {
     Rect r;
@@ -1797,11 +1789,8 @@ void title_render()
     glEnd();
     glPopMatrix();
     }
-         //glDisable(GL_TEXTURE_2D);
-         //physics_hat();
-     //    return;
+
     }
-    //glDisable(GL_TEXTURE_2D);
 }
 
 extern void change_grass_color();
@@ -1812,22 +1801,7 @@ void render()
 	Rect r;
 	Rect stats;
 	glClear(GL_COLOR_BUFFER_BIT);
-   // check_level_change_color();
-    //rendering_background();
-/*    if (gl.grass) {
-        
-        glColor4f(1.0f, 1.0f, 1.0f, 0.0f);
-        glBindTexture(GL_TEXTURE_2D, gl.grass_texture);
-        glBegin(GL_QUADS);
-            glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
-            glTexCoord2f(0.0f, 0.0f); glVertex2i(0, gl.yres);
-            glTexCoord2f(1.0f, 0.0f); glVertex2i(gl.xres, gl.yres);
-            glTexCoord2f(1.0f, 1.0f); glVertex2i(gl.xres, 0);
-        glEnd();
-        
-    } */
-   // check_level_change_color();
-    //rendering_background();
+
 if (gl.game_started) {
     if(!gl.game_paused)
         gl.regular_timer += 1;
@@ -1927,8 +1901,10 @@ if (gl.game_started) {
     }
 
 }
-    
-    renderSlimeBoss();
+    if (!gl.game_paused) {
+        renderSlimeBoss();
+
+    }
 	
 	//-------------------------------------------------------------------------
 	//Draw the bullets
@@ -2009,10 +1985,11 @@ if (gl.game_started) {
         }
     
     r.bot = gl.yres - 110;
-    render_medkit();
-    render_nuke();
+   
     // Add slime count to UI
     if (!gl.game_paused) {
+        render_medkit();
+        render_nuke();
         ggprint8b(&r, 16, 0x00ffff00, "n slimes: %i", g.nslimes);
         // ggprint8b(r, 24, 0xffffff00, bullets_accuracy_string_this_level);
         ggprint8b(&r, 16, 0x00ffff00, "c for credits: ");
@@ -2025,61 +2002,61 @@ if (gl.game_started) {
 
 
         for (int i = 0; i < MAX_ZOMBIES; i++) {
-    if (zombies[i].active) {
-        glPushMatrix();
-        glTranslatef(zombies[i].pos[0], zombies[i].pos[1], 0.0f);
+            if (zombies[i].active && !gl.game_paused) {
+                glPushMatrix();
+                glTranslatef(zombies[i].pos[0], zombies[i].pos[1], 0.0f);
 
-        float radius = 22.0f;
+                float radius = 22.0f;
 
-        // === BODY (mutant slime style) ===
-        glColor3f(0.5f, 0.0f, 0.0f); // deep red
-        glBegin(GL_POLYGON);
-        for (int j = 0; j < 20; j++) {
-            float angle = 2.0f * PI * j / 20.0f;
-            float r = radius + (j % 2 == 0 ? 2.5f : -1.5f); // wobble
-            glVertex2f(cos(angle) * r, sin(angle) * r);
-        }
-        glEnd();
+                // === BODY (mutant slime style) ===
+                glColor3f(0.5f, 0.0f, 0.0f); // deep red
+                glBegin(GL_POLYGON);
+                for (int j = 0; j < 20; j++) {
+                    float angle = 2.0f * PI * j / 20.0f;
+                    float r = radius + (j % 2 == 0 ? 2.5f : -1.5f); // wobble
+                    glVertex2f(cos(angle) * r, sin(angle) * r);
+                }
+                glEnd();
 
-        // === EYES ===
-        glColor3f(1.0f, 0.0f, 0.0f); // glowing red eyes
-        glBegin(GL_QUADS);
-        glVertex2f(-6, 6); glVertex2f(-4, 6);
-        glVertex2f(-4, 8); glVertex2f(-6, 8);
+                // === EYES ===
+                glColor3f(1.0f, 0.0f, 0.0f); // glowing red eyes
+                glBegin(GL_QUADS);
+                glVertex2f(-6, 6); glVertex2f(-4, 6);
+                glVertex2f(-4, 8); glVertex2f(-6, 8);
 
-        glVertex2f(4, 6); glVertex2f(6, 6);
-        glVertex2f(6, 8); glVertex2f(4, 8);
-        glEnd();
+                glVertex2f(4, 6); glVertex2f(6, 6);
+                glVertex2f(6, 8); glVertex2f(4, 8);
+                glEnd();
 
-        // === MOUTH ===
-        glColor3f(0.0f, 0.0f, 0.0f);
-        glBegin(GL_LINE_STRIP);
-        glVertex2f(-6, -4);
-        glVertex2f(-4, -6);
-        glVertex2f(-2, -4);
-        glVertex2f(0, -6);
-        glVertex2f(2, -4);
-        glVertex2f(4, -6);
-        glVertex2f(6, -4);
-        glEnd();
+                // === MOUTH ===
+                glColor3f(0.0f, 0.0f, 0.0f);
+                glBegin(GL_LINE_STRIP);
+                glVertex2f(-6, -4);
+                glVertex2f(-4, -6);
+                glVertex2f(-2, -4);
+                glVertex2f(0, -6);
+                glVertex2f(2, -4);
+                glVertex2f(4, -6);
+                glVertex2f(6, -4);
+                glEnd();
 
-        // === Tiny Claw Arms ===
-        glColor3f(0.3f, 0.0f, 0.0f);
-        glBegin(GL_QUADS);
-        // Left claw
-        glVertex2f(-14, 0);
-        glVertex2f(-12, 0);
-        glVertex2f(-12, 4);
-        glVertex2f(-14, 4);
-        // Right claw
-        glVertex2f(12, 0);
-        glVertex2f(14, 0);
-        glVertex2f(14, 4);
-        glVertex2f(12, 4);
-        glEnd();
+                // === Tiny Claw Arms ===
+                glColor3f(0.3f, 0.0f, 0.0f);
+                glBegin(GL_QUADS);
+                // Left claw
+                glVertex2f(-14, 0);
+                glVertex2f(-12, 0);
+                glVertex2f(-12, 4);
+                glVertex2f(-14, 4);
+                // Right claw
+                glVertex2f(12, 0);
+                glVertex2f(14, 0);
+                glVertex2f(14, 4);
+                glVertex2f(12, 4);
+                glEnd();
 
-        glPopMatrix();
-    }
+                glPopMatrix();
+            }
 }
 
 
@@ -2088,7 +2065,9 @@ for (int i = 0; i < MAX_ZOMBIES; i++) {
     if (zombies[i].active)
         activeZombies++;
 }
-ggprint8b(&r, 16, 0x00ff8800, "Zombies Active: %i", activeZombies);
+if (!gl.game_paused) {
+    ggprint8b(&r, 16, 0x00ff8800, "Zombies Active: %i", activeZombies);
+}
 
 
 
