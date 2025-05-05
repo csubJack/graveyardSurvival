@@ -1,6 +1,7 @@
 // Author: Diego Jimenez
 // Purpoes: header file, with my own contribution to the code
-// Application: Rendering text and backgrounds, keeping track of score
+// Application: Rendering text and background
+// Drawing objects and applying physics, plus some transition functions
 //
 #include "fonts.h"
 #include <GL/glx.h>
@@ -11,46 +12,49 @@
 #define VecZero(v) (v)[0]=0.0,(v)[1]=0.0,(v)[2]=0.0
 #define MakeVector(x, y, z, v) (v)[0]=(x),(v)[1]=(y),(v)[2]=(z)
 //---------------------------------------------------------------------------
+// Text and other functions related to it
 void show_score();
 
 void show_all(Rect *r, int xres, int yres,
         float delta_time, int credits_activation)
 {
     static float scroll_speed = 50.0f;
-    // changing this to keep track of credit positoin
-    // used to be yres / 2 + 60
-    static float bot_position = yres / 2 + 60;
+    static float bot_position = yres;
     static bool is_scrolling = false;
-    // changing this used to be !credits_actiavtion
+    
     if (credits_activation && !is_scrolling) {
         //bot_position = yres / 2 + 60;
         is_scrolling = true; // starts the scroll
     }
+    //Allow for text to scroll
     if (is_scrolling) {
         bot_position -= scroll_speed * delta_time;
+        // stops scrolling after offscreen
+        if (bot_position < -100) {
+            is_scrolling = false;
+            gl.credits = 0;
+        }
     }
-    // restarts the scrolling after it's off screen
-    if (bot_position < -100) {
-        //bot_position = yres / 2 + 60;
-        is_scrolling = false;
-        bot_position = yres / 2 + 60;
-        return;
+    // resetting the position of the text
+    if (gl.credits == 0 || credits_activation == 0) {
+        bot_position = yres;
+    
     }
-
-    r->center = 30;
-    r->bot = (int)bot_position;
-    r->left = xres / 2; 
-    ggprint8b(r, 32, 0x00ffff00, "Diego - Programmer");
-    ggprint8b(r, 32, 0x00ffff00, "Kenneth - Programmer");
-    ggprint8b(r, 32, 0x00ffff00, "Jack - Programmer");
-    ggprint8b(r, 32, 0x00ffff00, "Julio - Programmer");
-    ggprint8b(r, 32, 0x00ffff00, "Miguel - Programmer");
+    if (is_scrolling) {
+        r->center = 30;
+        r->bot = (int)bot_position;
+        r->left = xres / 2; 
+        ggprint8b(r, 32, 0x00ffff00, "Diego - Programmer");
+        ggprint8b(r, 32, 0x00ffff00, "Kenneth - Programmer");
+        ggprint8b(r, 32, 0x00ffff00, "Jack - Programmer");
+        ggprint8b(r, 32, 0x00ffff00, "Julio - Programmer");
+        ggprint8b(r, 32, 0x00ffff00, "Miguel - Programmer");
+    }
 }
 void show_title(Rect *r, int xres, int yres)
 {
     gl.player_score = 0;
-    /// add a moon to the backround, and gave at a shine
-    /// denominator here determines size of moon
+    // Setting the bounds for the moon
     float moon_radius = ((xres < yres) ? xres : yres) / 7.0f;
     float moon_x = xres - moon_radius - 20;
     float moon_y = yres - moon_radius - 20;
@@ -69,6 +73,7 @@ void show_title(Rect *r, int xres, int yres)
         }
     glEnd();
     glEnable(GL_TEXTURE_2D);
+
     //centering the title screen
     r->center = 30;
     r->bot = yres / 2 + 120;
@@ -77,12 +82,10 @@ void show_title(Rect *r, int xres, int yres)
     ggprint16(r, 36, 0x00ff0000, "Graveyard Survival");
     r->bot = yres / 2 + 30;
     ggprint12(r, 24, 0xffffffff, "Press space to start");
-    // any other instructions we want to give to the player
     r->bot = yres / 2 - 30;
-    ggprint8b(r, 16, 0x00ff00ff, "WASD to move");
+    ggprint8b(r, 16, 0x00ff00ff, "WAS to move");
     ggprint8b(r, 16, 0x00ff00ff, "space to fire");
 }
-//------------------------------
 
 extern void levelText (Rect  *r);
 extern void render();
@@ -94,6 +97,7 @@ void show_level_one()
     r.center = 30;
     r.bot = gl.yres / 2 + 120;
     r.left = gl.xres/2;
+    
     if (gl.player_score == 0 && !gl.game_paused) {
         ggprint16(&r, 16, 0x00ffffff, "Level One");
     }
@@ -107,8 +111,8 @@ void show_level_two_test()
     r.center = 30;
     r.bot = gl.yres / 2 + 120;
     r.left = gl.xres/2;
-    if (gl.player_score < 1250 && !gl.game_paused)
-    {
+    
+    if (gl.player_score < 1250 && !gl.game_paused) {
         ggprint16(&r, 16, 0x00ffffff, "Level Two");
         r.bot = gl.yres / 2 + 150;
         ggprint16(&r, 1, 0x00ff0000, "The Witch's Hat is Here");
@@ -122,8 +126,8 @@ void show_level_three()
     r.center = 30;
     r.bot = gl.yres / 2 + 120;
     r.left = gl.xres/2;
-    if (gl.player_score < 2200 && !gl.game_paused)
-    {
+    
+    if (gl.player_score < 2200 && !gl.game_paused) {
         ggprint16(&r, 16, 0x00ffffff, "Level Three");
     }
 
@@ -136,25 +140,26 @@ void show_level_four()
     r.center = 30;
     r.bot = gl.yres / 2 + 120;
     r.left = gl.xres/2;
-    if (gl.player_score < 3200 && !gl.game_paused)
-    {
+    
+    if (gl.player_score < 3200 && !gl.game_paused) {
         ggprint16(&r, 16, 0x00ffffff, "Level Four");
     }
 
 }
 
-//---------------------
 void show_score()
 {
     if (gl.game_started) {
-    Rect r;
-    r.bot = gl.yres - 80;
-    r.left = 10;
-    r.center = 0;
-    ggprint8b(&r, 16, 0x00ffff00, "Score: %i", gl.player_score);
-    ggprint8b(&r, 16, 0x00ffff00, "Time: %i", gl.regular_timer);
+        Rect r;
+        r.bot = gl.yres - 80;
+        r.left = 10;
+        r.center = 0;
+        ggprint8b(&r, 16, 0x00ffff00, "Score: %i", gl.player_score);
+        ggprint8b(&r, 16, 0x00ffff00, "Time: %i", gl.regular_timer);
     }
 }
+//----------------------------------------------------------------
+// Miscellaenous 
 void checking_level_transition()
 {
     if (gl.player_score == 0 && gl.game_started)
@@ -166,7 +171,6 @@ void checking_level_transition()
             delete s;
         }
         g.nslimes = 0;
-
         show_level_two_test();
     }
     else if (gl.player_score >= 2000 && (!(gl.player_score >= 3000))) {
@@ -270,9 +274,6 @@ Tree witch[] = {
     {600, 600, GRAVEYARD_TREE},
     {800, 0, GRAVEYARD_TREE},
 };
-// WITCH_TREE,
-//        GRAVEYARD_TREE,
-//        LEVEL_THREE_TREE
 
 int num_tombstones = sizeof(tombstones) / sizeof(Tombstone);
 int num_witch_items = sizeof(witch) / sizeof(Tree);
@@ -304,6 +305,7 @@ void get_tombstone_size(TombstoneType type, float *width, float *height)
 
     }
 }
+
 void get_tree_size(TreeType type, float *width, float *height)
 {
     switch(type) {
@@ -321,6 +323,7 @@ void get_tree_size(TreeType type, float *width, float *height)
             break;
     }
 }
+
 void draw_tombstone(float x, float y, float width, float height)
 {
     glDisable(GL_TEXTURE_2D);
@@ -346,6 +349,7 @@ void draw_tombstone(float x, float y, float width, float height)
     glEnd();
     glEnable(GL_TEXTURE_2D);
 }
+
 void draw_trees(float x, float y, float width, float height)
 {
     glDisable(GL_TEXTURE_2D);
@@ -371,6 +375,7 @@ void draw_trees(float x, float y, float width, float height)
     glEnd();
     glEnable(GL_TEXTURE_2D);
 }
+
 void draw_witch_house(float x, float y, float width, float height)
 {
     glDisable(GL_TEXTURE_2D);
@@ -414,14 +419,14 @@ void draw_witch_house(float x, float y, float width, float height)
         glVertex2f(x - width * 0.35f, y + height * 0.5f + windowSize);
     glEnd();
     if (gl.current_level == 3) {
-        // changing to 50.0f, 10
+        // determines road size and length
         float roadWidth = 20.0f;
         float startY = y;
-        float segments = 10;
+        float segments = 20;
         float curveAmplitude = 30.0f;
         float segmentHeight = 40.0f;
 
-        glColor3f(0.2f, 0.2f, 0.2f); // dark grey road
+        glColor3f(0.2f, 0.2f, 0.2f); // dark grey
 
         glBegin(GL_TRIANGLE_STRIP);
         for (int i = 0; i <= segments; ++i) {
@@ -439,6 +444,7 @@ void draw_witch_house(float x, float y, float width, float height)
 
     glEnable(GL_TEXTURE_2D);
 }
+
 void tombstone_physics_on_slimes(Slime *s)
 {
     for (int i = 0; i < num_tombstones; i ++) {
@@ -488,12 +494,11 @@ void tombstone_physics_on_slimes(Slime *s)
             }
         }
     }
-    //
 }
+
 void tombstone_physics() 
 {
-    // how the player interacts with all tombstones,
-    // prevents them from going through
+    //----------How Player reacts with Tombstones---------//
     for (int i = 0; i < num_tombstones; i++) {
         float w, h;
         get_tombstone_size(tombstones[i].type, &w, &h);
@@ -510,7 +515,7 @@ void tombstone_physics()
             float d1 = g.player.pos[1] - tomb_pos->y;
             float distance_between_player_tomb = sqrt(d0 * d0 + d1 * d1);
             if (distance_between_player_tomb > 0) {
-                // Left side of tombstone (Player-tombstone collision)
+                // Left side of tombstone
                 if (g.player.pos[0] + gl.player_size > tomb_pos->x
                         && g.player.pos[0] < tomb_pos->x) {
                     g.player.pos[0] = tomb_pos->x - gl.player_size;
@@ -520,12 +525,12 @@ void tombstone_physics()
                         && g.player.pos[0] > tomb_pos->x + w) {
                     g.player.pos[0] = tomb_pos->x + w + gl.player_size;
                 }
-                // Top side of tombstone
+                // Top of tombstone
                 else if (g.player.pos[1] + gl.player_size > tomb_pos->y
                         && g.player.pos[1] < tomb_pos->y) {
                     g.player.pos[1] = tomb_pos->y - gl.player_size;
                 }
-                // Bottom side of tombstone
+                // Bottom of tombstone
                 else if (g.player.pos[1] - gl.player_size < tomb_pos->y + h
                         && g.player.pos[1] > tomb_pos->y + h) {
                     g.player.pos[1] = tomb_pos->y + h + gl.player_size;
@@ -542,8 +547,7 @@ void tombstone_physics()
                     b->pos[0] < tomb_pos->x + w &&
                     b->pos[1] > tomb_pos->y &&
                     b->pos[1] < tomb_pos->y + h) {
-                // now remove bullet
-                // memcpy(&g.barr[i], &g.barr[g.nbullets-1], sizeof(Bullet)); Changec i -> j due to segfault
+                // removing bullets
                 memcpy(&g.barr[j], &g.barr[g.nbullets-1], sizeof(Bullet));
                 g.nbullets--;
                 continue;
@@ -584,7 +588,8 @@ void witch_forest_physics()
                         && g.player.pos[0] < tree_x) {
                     g.player.pos[0] = tree_x - gl.player_size;
                 }
-                else if (g.player.pos[0] - gl.player_size < tree_x + trunk_width
+                else if (g.player.pos[0] - gl.player_size <
+                        tree_x + trunk_width
                         && g.player.pos[0] > tree_x + trunk_width) {
                     g.player.pos[0] = tree_x + trunk_width + gl.player_size;
                 }
@@ -592,7 +597,8 @@ void witch_forest_physics()
                         && g.player.pos[1] < tree_y) {
                     g.player.pos[1] = tree_y - gl.player_size;
                 }
-                else if (g.player.pos[1] - gl.player_size < tree_y + trunk_height
+                else if (g.player.pos[1] - gl.player_size < 
+                        tree_y + trunk_height
                         && g.player.pos[1] > tree_y + trunk_height) {
                     g.player.pos[1] = tree_y + trunk_height + gl.player_size;
                 }
@@ -607,12 +613,12 @@ void witch_forest_physics()
         if (g.player.pos[0] + gl.player_size > leaves_x
                 && g.player.pos[0] - gl.player_size < leaves_x + leaves_width
                 && g.player.pos[1] + gl.player_size > leaves_y
-                && g.player.pos[1] - gl.player_size < leaves_y + leaves_height) {
+                && g.player.pos[1] -gl.player_size <
+                leaves_y + leaves_height) {
             g.player.vel[0] *= 0.25f;
             g.player.vel[1] *= 0.25f;
         }
         //--------------------------Bullet-Trunk Collision----------------//
-       // if (g.nbullets <= 0) return;
         int j = 0;
         while (j < g.nbullets) {
             Bullet *b = &g.barr[j];
@@ -621,26 +627,25 @@ void witch_forest_physics()
                     b->pos[0] < tree_x + trunk_width &&
                     b->pos[1] > tree_y &&
                     b->pos[1] < tree_y + trunk_height) {
-                // now remove bullet
+                // now removing bullet
                 memcpy(&g.barr[j], &g.barr[g.nbullets-1], sizeof(Bullet));
                 g.nbullets--;
-               // continue;
                if (j !=  g.nbullets) {
                     memcpy(&g.barr[j], &g.barr[g.nbullets-1], sizeof(Bullet));
                }
-            } //else {
-             //   ++j;
-           // }
-        ++j;
+            } 
+            ++j;
         }
     }
 }
+
 void witch_house_physics()
 {
     float house_x = 310.0f - 50.0f / 2.0f;
     float house_y = 400.0f;
     float house_width = 50.0f;
     float house_height = 50.0f;
+
     if (g.player.pos[0] + gl.player_size > house_x &&
             g.player.pos[0] - gl.player_size < house_x + house_width &&
             g.player.pos[1] + gl.player_size > house_y &&
@@ -661,6 +666,7 @@ void witch_house_physics()
             g.player.pos[1] = house_y + house_height + gl.player_size;
     }
 }
+
 void rendering_background() 
 {
     if (gl.current_level == 1) {
@@ -678,22 +684,14 @@ void rendering_background()
         }
     }
     else if (gl.current_level == 3) {
-        // changing size to be smaller as if in the distance
-        // 50 to 25
-        draw_witch_house(310,400, 50, 50);
-        // thinking of bushes, a few tombstones, and trees
+        draw_witch_house(500,600, 50, 50);
     }
-  /*   a series of while loops could work
-     level 1 grave stones, tombs, and sarcaphagi
-     level 2 witch's trees
-     level 3 Witch's House
-    */
 }
 
-//-------------------------------------------------------------------
+//--------------------------Enemy physics--------------------//
 void hat_taking_damage()
 {
-    // going up to 1.0 as in fully damaged
+    // accumilating damange max 1.0
    if (!hat.being_hit) {
        hat.being_hit = true;
        hat.damage = 0.0f;
@@ -708,6 +706,7 @@ void hat_taking_damage()
        }
    }
 }
+
 void move_hat()
 {
     if (gl.current_level == 1) {
@@ -715,10 +714,12 @@ void move_hat()
         MakeVector(6.0, 15.0, 0.0, hat.vel);
     }
 }
+
 void move_slimes()
 {
     Slime * s = g.slimeHead;
     float speed = 0.5f;
+    //determines if stationary or in movement
     while (s) {
         if (gl.game_paused) {
             s->vel[0] = 0;
@@ -727,26 +728,25 @@ void move_slimes()
             s->pos[1] = s->pos[1];
             s = s->next;
             speed = 0;
-            //continue;
         } else {
-        float dx = gl.player_center_x - s->pos[0];
-        float dy = gl.player_center_y - s->pos[1];
+            float dx = gl.player_center_x - s->pos[0];
+            float dy = gl.player_center_y - s->pos[1];
 
-        float dist = sqrt(dx * dx + dy * dy);
-        if(dist >0.1f) {
-            dx /= dist;
-            dy /= dist;
+            float dist = sqrt(dx * dx + dy * dy);
+            if(dist >0.1f) {
+                dx /= dist;
+                dy /= dist;
 
-            s->vel[0] = dx * speed;
-            s->vel[1] = dy * speed;
-        } else {
-            s->vel[0] = 0.0f;
-            s->vel[1] = 0.0f;
-        }
-        s->pos[0] += s->vel[0];
-        s->pos[1] += s->vel[1];
+                s->vel[0] = dx * speed;
+                s->vel[1] = dy * speed;
+            } else {
+                s->vel[0] = 0.0f;
+                s->vel[1] = 0.0f;
+            }
+            s->pos[0] += s->vel[0];
+            s->pos[1] += s->vel[1];
 
-        s= s->next;
+            s= s->next;
         }
     }
 }
