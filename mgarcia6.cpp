@@ -859,7 +859,8 @@ void renderSlimeBoss() {
         // pulsing text
         float pulse = 0.7f + 0.3f * sin(bossWarningTimer * 5.0f);
         int color = (int)(pulse * 255) << 16 | (int)(pulse * 100) << 8;
-        ggprint16(&r, 0, color, "WARNING: SLIME KING APPROACHING!");
+        if (gl.player_score  < 2100)
+            ggprint16(&r, 0, color, "WARNING: SLIME KING APPROACHING!");
     }
 
     // If boss isn't active maybe game over??
