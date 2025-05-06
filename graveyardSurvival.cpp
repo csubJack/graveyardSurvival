@@ -57,7 +57,7 @@ extern double physicsCountdown;
 extern double timeSpan;
 extern double timeDiff(struct timespec *start, struct timespec *end);
 extern void timeCopy(struct timespec *dest, struct timespec *source);
-
+extern bool slimeBossDefeated;
 //-----------------------------------------------------------------------------
 // importing images class
 class Image {
@@ -1070,17 +1070,30 @@ int check_keys(XEvent *e)
 
            break;
         case XK_1:
-            gl.player_score += 1000;
-            break;
+           gl.player_score += 1000;
+           if (gl.current_level == 3 && gl.player_score >= 3000) {
+               // Set boss as defeated
+               slimeBossDefeated = true;
+               // Clean up existing slimes
+               while (g.slimeHead) {
+                   Slime *s = g.slimeHead;
+                   g.slimeHead = g.slimeHead->next;
+                   delete s;
+               }
+               g.nslimes = 0;
+               // Force current level to 4
+               gl.current_level = 4;
+           }
+           break;
         case XK_2:
-            gl.grass ^= 1;
-		    break;
+           gl.grass ^= 1;
+           break;
         case XK_Down:
-			break;
-		case XK_equal:
-			break;
-		case XK_minus:
-			break;
+           break;
+        case XK_equal:
+           break;
+        case XK_minus:
+           break;
 	}
 	return 0;
 }

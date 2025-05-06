@@ -5,6 +5,8 @@
 #include <cmath>
 #include <ctime>
 
+bool slimeBossDefeated = false;
+
 void draw_player_health_bar(float x, float y, int health, int max_health)
 {
     const float bar_width = 40.0f;
@@ -41,6 +43,7 @@ void draw_player_health_bar(float x, float y, int health, int max_health)
     glVertex2f(health_x, health_y + bar_height);
     glEnd();
 }
+
 void spawn_medkit()
 {
     if (!g.medkit.active && g.nslimes == 0) {
@@ -65,12 +68,12 @@ void check_medkit_collision()
 {
     if (!g.medkit.active)
         return;
-    
+
     // Calculate distance between player and med kit
     float dx = g.player.pos[0] - g.medkit.pos[0];
     float dy = g.player.pos[1] - g.medkit.pos[1];
     float distance = sqrt(dx*dx + dy*dy);
-    
+
     // If player is close enough, restore health and deactivate med kit
     if (distance < (g.medkit.radius + gl.player_size)) {
         // Only restore up to maximum health (10)
@@ -283,6 +286,7 @@ void integrateBossSystem() {
     slimeBoss.splitTimer = 0.0f;
     slimeWavesDefeated = 0;
     bossWarningTimer = 0.0f;
+    slimeBossDefeated = false;
 }
 
 // Initialize the slime boss
@@ -390,6 +394,7 @@ void slimeBossTakeDamage(int damage) {
     // If boss is dead, spawn a bunch of smaller slimes and deactivate
     if (slimeBoss.health <= 0) {
         slimeBoss.state = SLIME_BOSS_DEAD;
+        slimeBossDefeated = true;
 
         // Spawn 8-12 medium sized slimes after death
         int spawn_count = 8 + rand() % 5;
@@ -398,7 +403,7 @@ void slimeBossTakeDamage(int damage) {
         }
 
         // Award a large score bonus
-        gl.player_score += 1000;
+        //gl.player_score += 1000;
         slimeBoss.active = false;
     }
 }
@@ -437,7 +442,7 @@ void slimeBossBounceAttack() {
         if (speed < 2.0f) {
             slimeBoss.isBouncing = false;
 
-            // Slow down 
+            // Slow down
             slimeBoss.vel[0] *= 0.2f;
             slimeBoss.vel[1] *= 0.2f;
         }
@@ -538,40 +543,51 @@ void updateAcidPools() {
 
 // Update the slime boss
 void updateSlimeBoss() {
+    // First, handle cleanup if not on level 3
+    if (slimeBossDefeated) {
+        // Just update acid pools but don't respawn the boss
+        updateAcidPools();
+        return;
+    }
+    
+    if (gl.current_level != 3) {
+        // If the boss is currently active, clean it up
+        if (slimeBoss.active) {
+            slimeBoss.active = false;
+
+            // Clear acid pools too
+            for (int i = 0; i < MAX_ACID_POOLS; i++) {
+                acidPools[i].active = false;
+            }
+        }
+        return;  // Exit immediately if not on level 3
+    }
+
+    // Continue with normal boss update logic for level 3
     // Check if we're on level 3 - only spawn boss there
     if (!slimeBoss.active) {
-        // If we're on level 3, show the boss immediately
-        if (gl.current_level == 3) {
-            if (bossWarningTimer <= 0) {
-                bossWarningTimer = 3.0f; // Show warning for 3 seconds
-                // Only initialize if not already active
-                if (!slimeBoss.active) {
-                    initSlimeBoss();
-                }
-            }
-            
-            // Update warning timer
-            if (bossWarningTimer > 0) {
-                bossWarningTimer -= 0.016f;
-            }
-        } else {
-            // Not on level 3, don't spawn boss
-            return;
+        if (bossWarningTimer <= 0) {
+            bossWarningTimer = 3.0f; // Show warning for 3 seconds
+            // Only initialize if not already active
+            initSlimeBoss();
         }
-        
+
+        // Update warning timer
+        if (bossWarningTimer > 0) {
+            bossWarningTimer -= 0.016f;
+        }
+
         // Update acid pools even when boss is inactive
         updateAcidPools();
         return;
     }
-
-    // Always rotate
+    
     slimeBoss.angle += slimeBoss.rotate;
 
-    // Update color - fade back to normal green after damage
     if (slimeBoss.color[0] > 0) {
         slimeBoss.color[0] *= 0.95f;
     }
-
+    
     // Boss state machine
     struct timespec currentTime;
     clock_gettime(CLOCK_REALTIME, &currentTime);
@@ -621,7 +637,7 @@ void updateSlimeBoss() {
                         clock_gettime(CLOCK_REALTIME, &slimeBoss.stateTimer);
                         clock_gettime(CLOCK_REALTIME, &slimeBoss.attackTimer);
                     }
-                } 
+                }
             }
             break;
 
@@ -667,7 +683,7 @@ void updateSlimeBoss() {
                     // create a ring of slimes
                     spawnSlimeBossMinions(8, 20.0f);
 
-                    // split into two medium-sized bosses (simulation by creating larger slimes) 
+                    // split into two medium-sized bosses (simulation by creating larger slimes)
                     // i believe this is a bit faulty as a new boss reappears sometime after the split
                     for (int i = 0; i < 2; i++) {
                         Slime *s = new Slime;
@@ -846,7 +862,12 @@ void renderAcidPools() {
         glDisable(GL_BLEND);
     }
 }
+
 void renderSlimeBoss() {
+    if (gl.current_level == 4) {
+        return;
+    }
+
     renderAcidPools();
 
     // boss warning message
@@ -859,7 +880,7 @@ void renderSlimeBoss() {
         // pulsing text
         float pulse = 0.7f + 0.3f * sin(bossWarningTimer * 5.0f);
         int color = (int)(pulse * 255) << 16 | (int)(pulse * 100) << 8;
-        if (gl.player_score  < 2100)
+        if (gl.player_score < 2100)
             ggprint16(&r, 0, color, "WARNING: SLIME KING APPROACHING!");
     }
 
@@ -1008,4 +1029,3 @@ void checkSlimeBossSpawn() {
     // Update last count
     lastSlimeCount = g.nslimes;
 }
-
