@@ -545,10 +545,9 @@ int main() {
     for (int i = 0; i < 3; i++) {
         spawnZombie();
     }
-
-
 	logOpen();
 	init_opengl();
+    cloudSystemInit();
     //checking_invincible_timer();
     gl.title_hat = 1;
     gl.main_hat = 0;
@@ -1734,13 +1733,14 @@ void title_render()
     //glColor3f(1.0, 1.0, 1.0);
     //--------------------------------------------
     if(!gl.game_started) {
-         if (gl.title_screen) {
-        show_title(&r, gl.xres, gl.yres);
+        if (gl.title_screen) {
+            show_title(&r, gl.xres, gl.yres);
             gl.moon_shine_timer += 1;
         //draw_Iris(&r, gl.xres, gl.yres);
         gl.title_hat = 1;
         //glColor3f(1.0, 1.0, 1.0);
         glEnable(GL_TEXTURE_2D);
+        cloudSystemRender();
     if(gl.title_hat) {
         glPushMatrix();
         glTranslatef(hat.pos[0], hat.pos[1], hat.pos[2]);

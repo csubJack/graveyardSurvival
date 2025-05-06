@@ -6,3 +6,5 @@
 
 void levelText(Rect *r);
 void draw();
+void cloudSystemInit();
+void cloudSystemRender();

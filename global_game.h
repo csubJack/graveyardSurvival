@@ -65,6 +65,8 @@ class Global {
         vector <pair<int, string>> top_scores;
         bool leaderboard_screen;
         bool nuke_active;
+        string currentLevelName = "";
+        bool levelNameGenerated = false;
         //int false_start; 
         Global() {
             //960 640
